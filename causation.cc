@@ -11,7 +11,8 @@
 #include <time.h>
 #include <math.h>
 
-#define SHOW_IMAGES 0
+#define SHOW_IMAGES 1
+#define NUMVCHANNELS 7
 #define REPOSITION_CURSOR_LAST_LINE std::cout << '\x08' << '\x0D'
 
 /*
@@ -24,8 +25,7 @@
 "6: CAP_OPENNI_GRAY_IMAGE 	Data given from RGB image generator",
 "7: CAP_OPENNI_IR_IMAGE 	Data given from IR image generator",
 */
-
-static const char* channel_map[] = {
+static const char* visual_channel_map[] = {
 	"CAP_OPENNI_DEPTH_MAP        ",
 	"CAP_OPENNI_POINT_CLOUD_MAP  ",
 	"CAP_OPENNI_DISPARITY_MAP    ",
@@ -35,6 +35,23 @@ static const char* channel_map[] = {
 	"CAP_OPENNI_GRAY_IMAGE       ",
 	"CAP_OPENNI_IR_IMAGE         ",
 };
+
+// Channels to do actual processing on
+static const int processed_visual_channels[] = {
+	5, 6,
+};
+
+
+/*
+ * Do computationally expensive processing on an image frame
+ */
+void visual_processing(cv::Mat &frame)
+{
+	// crashes.  wtf?!?
+//	uchar *test = frame.data;
+}
+
+
 
 /*
  * Rudimentary visual change detection:
@@ -51,7 +68,6 @@ static const char* channel_map[] = {
 bool visual_iter(struct timespec &event)
 {
 	static cv::VideoCapture cam(cv::CAP_OPENNI);
-	static cv::Mat framebuf;
 	static std::vector<cv::Mat> vidFrame;
 	static std::vector<float> old_norm, cur_norm, delta;
 	bool event_took_place = false;
@@ -60,7 +76,7 @@ bool visual_iter(struct timespec &event)
 		throw "failed to open camera";
 
 	cam.grab();
-	for (int i = 0; i < 7; i++)
+	for (int i = 0; i < NUMVCHANNELS; i++)
 	{
 		if (vidFrame.size() < i+1) {
 			vidFrame.push_back(cv::Mat());
@@ -68,21 +84,26 @@ bool visual_iter(struct timespec &event)
 			cur_norm.push_back(0.0);
 			delta.push_back(0.0);
 		}
-		cam.retrieve(framebuf, i);
-		cur_norm[i] = cv::norm(framebuf);
-		if (SHOW_IMAGES) {
-			framebuf.copyTo(vidFrame[i]);
-			imshow(channel_map[i], vidFrame[i]);
-		}
+		cam.retrieve(vidFrame[i], i);
+		cur_norm[i] = cv::norm(vidFrame[i]);
 	}
-	if (SHOW_IMAGES)
-		cv::waitKey(10);
 
+	// Do extra processing on visual channels of interest
+	for (int i = 0; i < sizeof(processed_visual_channels); i++)
+		visual_processing(vidFrame[processed_visual_channels[i]]);
+
+	if (SHOW_IMAGES) {
+		for (int i = 0; i < NUMVCHANNELS; i++)
+			imshow(visual_channel_map[i], vidFrame[i]);
+		cv::waitKey(1);
+	}
+
+	// Print out some debugging data
 	for (int i = 0; i < vidFrame.size(); i++) {
 		delta[i] = abs(cur_norm[i] - old_norm[i]);
-		std::cout << channel_map[i] << "\t" << cur_norm[i] << " \t " << delta[i] << std::endl;
+		std::cout << visual_channel_map[i] << "\t" << cur_norm[i] << " \t " << delta[i] << std::endl;
 	}
-
+	// Track any sudden changes in our entire field of vision (from last calls to this one)
 	for (int i = 0; i < vidFrame.size(); i++) {
 		old_norm[i] = cur_norm[i];
 		if ( (cur_norm[i] * 0.10) <= delta[i] )
@@ -112,7 +133,6 @@ int main(int argc, char **argv)
 			REPOSITION_CURSOR_LAST_LINE;
 			std::cout << "visual event took place at " << event_times[0].tv_sec << "." << event_times[0].tv_nsec << std::endl;
 		}
-		usleep(40000);
 	}
 	return 0;
 }
