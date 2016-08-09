@@ -47,8 +47,6 @@ static const int processed_visual_channels[] = {
  */
 void visual_processing(cv::Mat &frame)
 {
-	// crashes.  wtf?!?
-//	uchar *test = frame.data;
 }
 
 
@@ -68,8 +66,8 @@ void visual_processing(cv::Mat &frame)
 bool visual_iter(struct timespec &event)
 {
 	static cv::VideoCapture cam(cv::CAP_OPENNI);
-	static std::vector<cv::Mat> vidFrame;
-	static std::vector<float> old_norm, cur_norm, delta;
+	static std::vector<cv::Mat> vidFrame(NUMVCHANNELS);
+	static std::vector<float> old_norm(NUMVCHANNELS), cur_norm(NUMVCHANNELS), delta(NUMVCHANNELS);
 	bool event_took_place = false;
 
 	if (!cam.isOpened())
@@ -78,18 +76,12 @@ bool visual_iter(struct timespec &event)
 	cam.grab();
 	for (int i = 0; i < NUMVCHANNELS; i++)
 	{
-		if (vidFrame.size() < i+1) {
-			vidFrame.push_back(cv::Mat());
-			old_norm.push_back(0.0);
-			cur_norm.push_back(0.0);
-			delta.push_back(0.0);
-		}
 		cam.retrieve(vidFrame[i], i);
 		cur_norm[i] = cv::norm(vidFrame[i]);
 	}
 
 	// Do extra processing on visual channels of interest
-	for (int i = 0; i < sizeof(processed_visual_channels); i++)
+	for (int i = 0; i < (sizeof(processed_visual_channels) / sizeof(*processed_visual_channels)); i++)
 		visual_processing(vidFrame[processed_visual_channels[i]]);
 
 	if (SHOW_IMAGES) {
