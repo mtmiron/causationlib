@@ -47,6 +47,16 @@ static const int processed_visual_channels[] = {
  */
 void visual_processing(cv::Mat &frame)
 {
+	/*
+	cv::Point midpoint(frame.cols / 2.0, frame.rows / 2.0);
+	cv::circle(frame, midpoint, (frame.cols + frame.rows) / 8, cv::Scalar(255,255,255));
+	*/
+	/*
+	for (int r = 1; r < frame.rows; r += 2)
+		for (int c = 1; c < frame.cols; c += 2)
+			if ( *(frame.ptr(r-1) + c * frame.elemSize()) < *(frame.ptr(r+1) + c * frame.elemSize()) )
+				frame(cv::Range(r - 1, r + 1), cv::Range(c - 1, c + 1)) = *(frame.ptr(r) + c * frame.elemSize());
+	*/
 }
 
 
@@ -80,6 +90,20 @@ bool visual_iter(struct timespec &event)
 		cur_norm[i] = cv::norm(vidFrame[i]);
 	}
 
+	// Print out some debugging data
+	for (int i = 0; i < vidFrame.size(); i++) {
+		delta[i] = abs(cur_norm[i] - old_norm[i]);
+		std::cout << visual_channel_map[i] << "\t" << cur_norm[i] << " \t " << delta[i] << std::endl;
+	}
+
+	// Track any sudden changes in our entire field of vision (from last calls to this one)
+	for (int i = 0; i < vidFrame.size(); i++) {
+		old_norm[i] = cur_norm[i];
+		if ( (cur_norm[i] * 0.10) <= delta[i] )
+			event_took_place = !clock_gettime(CLOCK_REALTIME, &event);
+		REPOSITION_CURSOR_LAST_LINE;
+	}
+
 	// Do extra processing on visual channels of interest
 	for (int i = 0; i < (sizeof(processed_visual_channels) / sizeof(*processed_visual_channels)); i++)
 		visual_processing(vidFrame[processed_visual_channels[i]]);
@@ -88,19 +112,6 @@ bool visual_iter(struct timespec &event)
 		for (int i = 0; i < NUMVCHANNELS; i++)
 			imshow(visual_channel_map[i], vidFrame[i]);
 		cv::waitKey(1);
-	}
-
-	// Print out some debugging data
-	for (int i = 0; i < vidFrame.size(); i++) {
-		delta[i] = abs(cur_norm[i] - old_norm[i]);
-		std::cout << visual_channel_map[i] << "\t" << cur_norm[i] << " \t " << delta[i] << std::endl;
-	}
-	// Track any sudden changes in our entire field of vision (from last calls to this one)
-	for (int i = 0; i < vidFrame.size(); i++) {
-		old_norm[i] = cur_norm[i];
-		if ( (cur_norm[i] * 0.10) <= delta[i] )
-			event_took_place = !clock_gettime(CLOCK_REALTIME, &event);
-		REPOSITION_CURSOR_LAST_LINE;
 	}
 
 	return event_took_place;
