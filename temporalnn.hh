@@ -25,7 +25,7 @@ long milli_to_nano(long milli)
 }
 
 
-class Dendrite : protected Neuron
+class Dendrite
 {
   private:
 	short delaytime;
@@ -40,14 +40,14 @@ class Dendrite : protected Neuron
 
 	~Dendrite();
 
-	struct timespec Dendrite::fire(short input_v)
+	struct timespec fire(short input_v)
 	{
 		// TODO: figure out how to make dendrites grow based on input voltage events
 	}
 };
 
 
-class Synapse : protected Neuron
+class Synapse
 {
   private:
 	short vesicles;
@@ -60,7 +60,7 @@ class Synapse : protected Neuron
 	Synapse(short vscls = 0) : vesicles(vscls) { }
 	~Synapse();
 
-	struct timespec Synapse::fire(short input_v)
+	struct timespec fire(short input_v)
 	{
 		long n_dconnections = d_output.size();
 		long n_nconnections = n_output.size();
@@ -68,13 +68,11 @@ class Synapse : protected Neuron
 
 		for (int i = 0; i < n_dconnections; i++)
 			d_output[i]->fire(dist_voltage);
-		for (int i = 0; i < n_nconnections; i++)
-			n_output[i]->fire(dist_voltage);
 	}
 };
 
 
-class Neuron : protected NeuralNet
+class Neuron
 {
   private:
 	short refractory_time = 2;
@@ -101,7 +99,7 @@ class Neuron : protected NeuralNet
 
 	~Neuron();
 
-	struct timespec Neuron::fire(short input_v)
+	void fire(short input_v)
 	{
 		static short voltage = resting_v;
 		long time_delta = 0;
@@ -119,7 +117,7 @@ class Neuron : protected NeuralNet
 		if (voltage >= fire_v)
 			synapse.fire(fire_v);
 
-		return time_delta;
+		return;
 	}
 };
 
