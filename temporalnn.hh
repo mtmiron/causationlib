@@ -10,15 +10,123 @@ using namespace std;
 
 
 class Synapse;
-class Dendrites;
+class Dendrite;
 class Neuron;
-class Cluster;
 
+
+long nano_to_milli(long nano)
+{
+	return nano / pow(10, 6);
+}
+
+long milli_to_nano(long milli)
+{
+	return milli * pow(10, 6);
+}
+
+
+class Dendrite : protected Neuron
+{
+  private:
+	short delaytime;
+	short seekfactor;
+	short clusterfactor;
+	struct timespec time;
+
+  public:
+	Dendrite(short delay, short seek, short cluster)
+		: delaytime(delay), seekfactor(seek), clusterfactor(cluster)
+	{ }
+
+	~Dendrite();
+
+	struct timespec Dendrite::fire(short input_v)
+	{
+		// TODO: figure out how to make dendrites grow based on input voltage events
+	}
+};
+
+
+class Synapse : protected Neuron
+{
+  private:
+	short vesicles;
+	struct timespec time;
+
+	vector<Neuron *> n_output;
+	vector<Dendrite *> d_output;
+
+  public:
+	Synapse(short vscls = 0) : vesicles(vscls) { }
+	~Synapse();
+
+	struct timespec Synapse::fire(short input_v)
+	{
+		long n_dconnections = d_output.size();
+		long n_nconnections = n_output.size();
+		short dist_voltage = input_v / (n_dconnections + n_nconnections);
+
+		for (int i = 0; i < n_dconnections; i++)
+			d_output[i]->fire(dist_voltage);
+		for (int i = 0; i < n_nconnections; i++)
+			n_output[i]->fire(dist_voltage);
+	}
+};
+
+
+class Neuron : protected NeuralNet
+{
+  private:
+	short refractory_time = 2;
+	short excited_time = 20;
+	short refractory_v = -50;
+	short resting_v = -80;
+	short action_v = -30;
+	short fire_v = 50;
+	struct timespec time;
+
+  protected:
+	Synapse synapse;
+	vector<Dendrite> dendrites;
+
+  public:
+	Neuron(short reftime = 50, short excitetime = 20, short refv = -50,
+			short rest_v = -80, short act_v = -30, short firev = 50)
+		: refractory_time(reftime), excited_time(excitetime),
+		  refractory_v(refv), resting_v(rest_v), action_v(act_v),
+		  fire_v(firev), synapse(), dendrites()
+	{
+		clock_gettime(CLOCK_REALTIME, &time);
+	}
+
+	~Neuron();
+
+	struct timespec Neuron::fire(short input_v)
+	{
+		static short voltage = resting_v;
+		long time_delta = 0;
+		struct timespec nowtime;
+
+		clock_gettime(CLOCK_REALTIME, &nowtime);
+		time_delta = nano_to_milli(nowtime.tv_nsec) - nano_to_milli(time.tv_nsec);
+
+		if (time_delta > excited_time)
+			voltage = resting_v;
+		voltage += input_v;
+		if (time_delta <= refractory_time)
+			return;
+
+		if (voltage >= fire_v)
+			synapse.fire(fire_v);
+
+		return time_delta;
+	}
+};
 
 class NeuralNet
 {
   private:
-	vector<Cluster> cluster;
+	vector<Neuron> neuron;
 
   public:
 	NeuralNet();
@@ -27,68 +135,5 @@ class NeuralNet
 };
 
 
-class Cluster : protected NeuralNet
-{
-  private:
-	vector<Dendrites> dendrites;
-};
-
-
-class Neuron : protected NeuralNet
-{
-  private:
-	char refractory_time = 50;
-	char excited_time = 20;
-	char refractory_v = -50;
-	char resting_v = -80;
-	char action_v = -30;
-	char fire_v = 50;
-
-  protected:
-	vector<Synapse> synapse;
-	vector<Dendrites> dendrites;
-
-  public:
-	Neuron(char reftime = 50, char excitetime = 20, char refv = -50,
-			char rest_v = -80, char act_v = -30, char firev = 50)
-		: refractory_time(reftime), excited_time(excitetime),
-		  refractory_v(refv), resting_v(rest_v), action_v(act_v),
-		  fire_v(firev)
-	{ }
-
-	~Neuron();
-};
-
-
-class Synapse : protected Neuron
-{
-  private:
-	char vesicles;
-	struct timespec time;
-
-  public:
-	Synapse(char vscls = 0) : vesicles(vscls) { }
-	~Synapse();
-
-	Neuron *output;
-};
-
-
-class Dendrites : protected Neuron
-{
-  private:
-	char delaytime;
-	char seekfactor;
-	char clusterfactor;
-	vector<Synapse> synapse;
-
-
-  public:
-	Dendrites(char delay, char seek, char cluster)
-		: delaytime(delay), seekfactor(seek), clusterfactor(cluster)
-	{ }
-
-	~Dendrites();
-};
 
 } // namespace
