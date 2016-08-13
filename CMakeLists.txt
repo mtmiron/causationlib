@@ -1,7 +1,7 @@
+set( CMAKE_BUILD_TYPE Debug )
 cmake_minimum_required(VERSION 2.8)
 project( CausationLib )
 find_package( OpenCV REQUIRED )
-set( CMAKE_BUILD_TYPE Debug )
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g" )
 add_library( temporalnn temporalnn.cc )
 #set_target_properties( temporalnn PROPERTIES LINKER_LANGUAGE CXX )

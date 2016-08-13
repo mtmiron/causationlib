@@ -9,7 +9,7 @@ namespace TemporalNet {
 using namespace std;
 
 
-class Synapse;
+class Axon;
 class Dendrite;
 class Neuron;
 
@@ -34,37 +34,36 @@ class Dendrite
 	struct timespec time;
 
   public:
-	Dendrite(short delay, short seek, short cluster)
+	Dendrite(short delay = 0, short seek = 1, short cluster = 1)
 		: delaytime(delay), seekfactor(seek), clusterfactor(cluster)
 	{ }
 
 	~Dendrite();
 
-	struct timespec fire(short input_v)
+	void fire(short input_v)
 	{
 		// TODO: figure out how to make dendrites grow based on input voltage events
 	}
 };
 
 
-class Synapse
+class Axon
 {
   private:
 	short vesicles;
 	struct timespec time;
 
-	vector<Neuron *> n_output;
 	vector<Dendrite *> d_output;
 
   public:
-	Synapse(short vscls = 0) : vesicles(vscls) { }
-	~Synapse();
+	Axon(short vscls = 0) : vesicles(vscls) {}
 
-	struct timespec fire(short input_v)
+	~Axon();
+
+	void fire(short input_v)
 	{
 		long n_dconnections = d_output.size();
-		long n_nconnections = n_output.size();
-		short dist_voltage = input_v / (n_dconnections + n_nconnections);
+		short dist_voltage = input_v / n_dconnections;
 
 		for (int i = 0; i < n_dconnections; i++)
 			d_output[i]->fire(dist_voltage);
@@ -84,7 +83,7 @@ class Neuron
 	struct timespec time;
 
   protected:
-	Synapse synapse;
+	Axon axon;
 	vector<Dendrite> dendrites;
 
   public:
@@ -92,7 +91,7 @@ class Neuron
 			short rest_v = -80, short act_v = -30, short firev = 50)
 		: refractory_time(reftime), excited_time(excitetime),
 		  refractory_v(refv), resting_v(rest_v), action_v(act_v),
-		  fire_v(firev), synapse(), dendrites()
+		  fire_v(firev), axon(), dendrites()
 	{
 		clock_gettime(CLOCK_REALTIME, &time);
 	}
@@ -115,7 +114,7 @@ class Neuron
 			return;
 
 		if (voltage >= fire_v)
-			synapse.fire(fire_v);
+			axon.fire(fire_v);
 
 		return;
 	}
