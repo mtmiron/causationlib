@@ -5,14 +5,7 @@
 
 
 namespace TemporalNet {
-
 using namespace std;
-
-
-class Axon;
-class Dendrite;
-class Neuron;
-
 
 long nano_to_milli(long nano)
 {
@@ -24,6 +17,8 @@ long milli_to_nano(long milli)
 	return milli * pow(10, 6);
 }
 
+class Neuron;
+class NeuralNet;
 
 class Dendrite
 {
@@ -31,19 +26,16 @@ class Dendrite
 	short delaytime;
 	short seekfactor;
 	short clusterfactor;
+	unsigned int bulge;
 	struct timespec time;
+	Neuron *neuron;
 
   public:
-	Dendrite(short delay = 0, short seek = 1, short cluster = 1)
-		: delaytime(delay), seekfactor(seek), clusterfactor(cluster)
-	{ }
-
+	Dendrite(Neuron *owner, short delay = 0, short seek = 1, short cluster = 1);
 	~Dendrite();
 
-	void fire(short input_v)
-	{
-		// TODO: figure out how to make dendrites grow based on input voltage events
-	}
+	int fire(short input_v);
+	int grow(short input_v);
 };
 
 
@@ -54,20 +46,13 @@ class Axon
 	struct timespec time;
 
 	vector<Dendrite *> d_output;
+	vector<Neuron *> n_output;
 
   public:
-	Axon(short vscls = 0) : vesicles(vscls) {}
-
+	Axon(short vscls = 0);
 	~Axon();
 
-	void fire(short input_v)
-	{
-		long n_dconnections = d_output.size();
-		short dist_voltage = input_v / n_dconnections;
-
-		for (int i = 0; i < n_dconnections; i++)
-			d_output[i]->fire(dist_voltage);
-	}
+	int fire(short input_v);
 };
 
 
@@ -81,56 +66,29 @@ class Neuron
 	short action_v = -30;
 	short fire_v = 50;
 	struct timespec time;
+	NeuralNet *net;
 
   protected:
 	Axon axon;
 	vector<Dendrite> dendrites;
 
   public:
-	Neuron(short reftime = 50, short excitetime = 20, short refv = -50,
-			short rest_v = -80, short act_v = -30, short firev = 50)
-		: refractory_time(reftime), excited_time(excitetime),
-		  refractory_v(refv), resting_v(rest_v), action_v(act_v),
-		  fire_v(firev), axon(), dendrites()
-	{
-		clock_gettime(CLOCK_REALTIME, &time);
-	}
-
+	Neuron(NeuralNet *owner, short reftime = 50, short excitetime = 20, short refv = -50,
+			short rest_v = -80, short act_v = -30, short firev = 50);
 	~Neuron();
 
-	void fire(short input_v)
-	{
-		static short voltage = resting_v;
-		long time_delta = 0;
-		struct timespec nowtime;
-
-		clock_gettime(CLOCK_REALTIME, &nowtime);
-		time_delta = nano_to_milli(nowtime.tv_nsec) - nano_to_milli(time.tv_nsec);
-
-		if (time_delta > excited_time)
-			voltage = resting_v;
-		voltage += input_v;
-		if (time_delta <= refractory_time)
-			return;
-
-		if (voltage >= fire_v)
-			axon.fire(fire_v);
-
-		return;
-	}
+	int fire(short input_v);
 };
 
 class NeuralNet
 {
   private:
-	vector<Neuron> neuron;
+	vector< vector<Neuron> > neurons;
 
   public:
-	NeuralNet();
+	NeuralNet(int x = 100, int y = 100);
 	~NeuralNet();
 
 };
-
-
 
 } // namespace
