@@ -20,11 +20,15 @@ long milli_to_nano(long milli)
 /*
  * class Dendrite
  */
-Dendrite::Dendrite(Neuron *owner, short delay, short seek, short cluster)
+Dendrite::Dendrite(short delay, short seek, short cluster)
 		: delaytime(delay), seekfactor(seek), clusterfactor(cluster),
 		  bulge(0)
 {
 	clock_gettime(CLOCK_REALTIME, &time);
+}
+
+Dendrite *Dendrite::setNeuron(Neuron *owner)
+{
 	neuron = owner;
 }
 
@@ -61,15 +65,24 @@ int Axon::fire(short input_v)
 /*
  * class Neuron
  */
-Neuron::Neuron(NeuralNet *owner, short reftime, short excitetime, short refv, short rest_v,
+Neuron::Neuron(short reftime, short excitetime, short refv, short rest_v,
 		short act_v, short firev) : refractory_time(reftime),excited_time(excitetime),
 		  refractory_v(refv), resting_v(rest_v), action_v(act_v), fire_v(firev)
 {
-	net = owner;
-	dendrites.push_back(Dendrite(this));
+	dendrites.push_back(Dendrite());
 	clock_gettime(CLOCK_REALTIME, &time);
 }
 
+Neuron *Neuron::setNet(NeuralNet *owner)
+{
+	net = owner;
+}
+
+Neuron *Neuron::setupDendrites()
+{
+	for (int i = 0; i < dendrites.size(); i++)
+		dendrites[i].setNeuron(this);
+}
 
 int Neuron::fire(short input_v)
 {
@@ -100,8 +113,22 @@ int Neuron::fire(short input_v)
 NeuralNet::NeuralNet(int x, int y)
 {
 	for (int i = 0; i < x; i++)
+	{
+		vector<Neuron> v;
+		neurons.push_back(v);
 		for (int j = 0; j < y; j++)
-			neurons[i].push_back(Neuron(this));
+			neurons[i].push_back(Neuron());
+	}
+}
+
+void NeuralNet::setupNeurons()
+{
+	for (int i = 0; i < neurons.size(); i++)
+		for (int j = 0; j < neurons[i].size(); j++)
+		{
+			neurons[i][j].setNet(this);
+			neurons[i][j].setupDendrites();
+		}
 }
 
 } // namespace

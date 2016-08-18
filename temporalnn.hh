@@ -25,7 +25,8 @@ class Dendrite
 	Neuron *neuron;
 
   public:
-	Dendrite(Neuron *owner, short delay = 0, short seek = 1, short cluster = 1);
+	Dendrite(short delay = 0, short seek = 1, short cluster = 1);
+	Dendrite *setNeuron(Neuron *owner);
 
 	int fire(short input_v);
 	int grow(short input_v);
@@ -65,20 +66,21 @@ class Neuron
 	vector<Dendrite> dendrites;
 
   public:
-	Neuron(NeuralNet *owner, short reftime = 50, short excitetime = 20, short refv = -50,
+	Neuron(short reftime = 50, short excitetime = 20, short refv = -50,
 			short rest_v = -80, short act_v = -30, short firev = 50);
 
+	Neuron *setNet(NeuralNet *owner);
+	Neuron *setupDendrites();
 	int fire(short input_v);
 };
 
 class NeuralNet
 {
-  private:
+  public:
 	vector< vector<Neuron> > neurons;
 
-  public:
 	NeuralNet(int x = 100, int y = 100);
-
+	void setupNeurons();
 };
 
 } // namespace
