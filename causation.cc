@@ -13,7 +13,9 @@
 #include "temporalnn.hh"
 
 #define NUMVCHANNELS 7
-#define REPOSITION_CURSOR_LAST_LINE std::cout << '\x08' << '\x0D'
+#define REPOSITION_CURSOR_LAST_LINE std::cout << '\x08' << '\x0D' \
+<< "                                                                      "\
+<< '\x0D'
 
 using namespace TemporalNet;
 
@@ -38,15 +40,21 @@ static const char* visual_channel_map[] = {
 	"CAP_OPENNI_IR_IMAGE         ",
 };
 
-// Channels to do actual processing on
+/*
+ * Channels to do actual processing on
+ */
 static const int processed_visual_channels[] = {
 	5, 6,
 };
 
+/*
+ * Command line options
+ */
 static struct options {
 	bool show_images;
 	bool show_visual_norms;
 } options;
+
 
 
 /*
@@ -97,14 +105,14 @@ int visual_iter(struct timespec &event)
 		cur_norm[i] = cv::norm(vidFrame[i]);
 	}
 
-	// Calculate change in intensity for each video channel
+	// Calculate change in matrix magnitude for each video channel
 	for (int i = 0; i < vidFrame.size(); i++) {
 		delta[i] = abs(cur_norm[i] - old_norm[i]);
 		if (options.show_visual_norms)
 			std::cout << visual_channel_map[i] << "\t" << cur_norm[i] << " \t " << delta[i] << std::endl;
 	}
 
-	// Track any sudden changes in our entire field of vision (from last calls to this one)
+	// Track any sudden changes in our entire field of vision (from last call to this one)
 	for (int i = 0; i < vidFrame.size(); i++) {
 		old_norm[i] = cur_norm[i];
 		if ( (cur_norm[i] * 0.10) <= delta[i] ) {
