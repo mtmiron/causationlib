@@ -10,10 +10,12 @@
 #include <opencv2/highgui.hpp>
 #include <time.h>
 #include <math.h>
+#include "temporalnn.hh"
 
-#define SHOW_IMAGES 1
 #define NUMVCHANNELS 7
 #define REPOSITION_CURSOR_LAST_LINE std::cout << '\x08' << '\x0D'
+
+using namespace TemporalNet;
 
 /*
 "0: CAP_OPENNI_DEPTH_MAP 	Depth values in mm (CV_16UC1)",
@@ -40,6 +42,10 @@ static const char* visual_channel_map[] = {
 static const int processed_visual_channels[] = {
 	5, 6,
 };
+
+static struct options {
+	bool show_images;
+} options;
 
 
 /*
@@ -108,7 +114,7 @@ bool visual_iter(struct timespec &event)
 	for (int i = 0; i < (sizeof(processed_visual_channels) / sizeof(*processed_visual_channels)); i++)
 		visual_processing(vidFrame[processed_visual_channels[i]]);
 
-	if (SHOW_IMAGES) {
+	if (options.show_images) {
 		for (int i = 0; i < NUMVCHANNELS; i++)
 			imshow(visual_channel_map[i], vidFrame[i]);
 		cv::waitKey(1);
@@ -117,10 +123,36 @@ bool visual_iter(struct timespec &event)
 	return event_took_place;
 }
 
+void print_help(char **argv)
+{
+	printf("Usage: %s [opts]\n\n\tOptions are:\n\t\t-h\tThis help\n\t\t-s\tShow images\n", *argv);
+	exit(0);
+}
+
+struct options parse_args(int argc, char **argv)
+{
+	int c = 0;
+
+	while ((c = getopt(argc, argv, "sh")) != -1)
+	{
+		switch (c) {
+		case 's':
+			options.show_images = true;
+			break;
+		case 'h':
+			print_help(argv);
+			break;
+		}
+	}
+	return options;
+}
+
 int main(int argc, char **argv)
 {
 	int pid = 0;
 	struct timespec event_times[1] = { 0 };
+
+	parse_args(argc, argv);
 
 	pid = getpid();
 	if (setpriority(PRIO_PROCESS, pid, 20) == -1 && errno != 0)

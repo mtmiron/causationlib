@@ -5,6 +5,18 @@ namespace TemporalNet {
 using namespace std;
 
 
+long nano_to_milli(long nano)
+
+{
+	return nano / pow(10, 6);
+}
+
+long milli_to_nano(long milli)
+{
+	return milli * pow(10, 6);
+}
+
+
 /*
  * class Dendrite
  */

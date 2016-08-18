@@ -7,15 +7,9 @@
 namespace TemporalNet {
 using namespace std;
 
-long nano_to_milli(long nano)
-{
-	return nano / pow(10, 6);
-}
+long nano_to_milli(long nano);
+long milli_to_nano(long milli);
 
-long milli_to_nano(long milli)
-{
-	return milli * pow(10, 6);
-}
 
 class Neuron;
 class NeuralNet;
@@ -32,7 +26,6 @@ class Dendrite
 
   public:
 	Dendrite(Neuron *owner, short delay = 0, short seek = 1, short cluster = 1);
-	~Dendrite();
 
 	int fire(short input_v);
 	int grow(short input_v);
@@ -50,7 +43,6 @@ class Axon
 
   public:
 	Axon(short vscls = 0);
-	~Axon();
 
 	int fire(short input_v);
 };
@@ -75,7 +67,6 @@ class Neuron
   public:
 	Neuron(NeuralNet *owner, short reftime = 50, short excitetime = 20, short refv = -50,
 			short rest_v = -80, short act_v = -30, short firev = 50);
-	~Neuron();
 
 	int fire(short input_v);
 };
@@ -87,7 +78,6 @@ class NeuralNet
 
   public:
 	NeuralNet(int x = 100, int y = 100);
-	~NeuralNet();
 
 };
 
