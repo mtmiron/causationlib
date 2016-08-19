@@ -38,13 +38,15 @@ class Axon
   private:
 	short vesicles;
 	struct timespec time;
+	Neuron *neuron;
 
 	vector<Dendrite *> d_output;
 	vector<Neuron *> n_output;
 
   public:
 	Axon(short vscls = 0);
-
+	Neuron *setNeuron(Neuron *owner);
+	int numberOfConnections();
 	int fire(short input_v);
 };
 
@@ -71,6 +73,8 @@ class Neuron
 
 	Neuron *setNet(NeuralNet *owner);
 	Neuron *setupDendrites();
+	Neuron *setupAxon();
+	int numberOfConnections();
 	int fire(short input_v);
 };
 

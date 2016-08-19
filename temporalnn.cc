@@ -50,6 +50,16 @@ int Dendrite::grow(short input_v)
 Axon::Axon(short vscls) : vesicles(vscls)
 { }
 
+Neuron *Axon::setNeuron(Neuron *owner)
+{
+	return neuron = owner;
+}
+
+int Axon::numberOfConnections()
+{
+	return d_output.size() + n_output.size();
+}
+
 int Axon::fire(short input_v)
 {
 	long n_dconnections = d_output.size();
@@ -82,6 +92,17 @@ Neuron *Neuron::setupDendrites()
 {
 	for (int i = 0; i < dendrites.size(); i++)
 		dendrites[i].setNeuron(this);
+	return this;
+}
+
+Neuron *Neuron::setupAxon()
+{
+	return axon.setNeuron(this);
+}
+
+int Neuron::numberOfConnections()
+{
+	return axon.numberOfConnections();
 }
 
 int Neuron::fire(short input_v)
@@ -127,6 +148,7 @@ void NeuralNet::setupNeurons()
 		for (int j = 0; j < neurons[i].size(); j++)
 		{
 			neurons[i][j].setNet(this);
+			neurons[i][j].setupAxon();
 			neurons[i][j].setupDendrites();
 		}
 }
