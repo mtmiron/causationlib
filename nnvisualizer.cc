@@ -15,7 +15,6 @@ Mat createImageFromNet(NeuralNet &net, int height, int width)
 	int y = net.neurons[0].size();
 	float x_pos = 0;
 	float y_pos = 0;
-	int num = 0;
 
 	x_pos = ((float)width / x);
 	y_pos = ((float)height / y);
