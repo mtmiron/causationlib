@@ -18,14 +18,14 @@ class Dendrite
 {
   private:
 	short delaytime;
-	short seekfactor;
+	float seekfactor;
 	short clusterfactor;
 	unsigned int bulge;
 	struct timespec time;
 	Neuron *neuron;
 
   public:
-	Dendrite(short delay = 0, short seek = 1, short cluster = 1);
+	Dendrite(short delay = 0, float seek = 1.0, short cluster = 1);
 	Dendrite *setNeuron(Neuron *owner);
 
 	int fire(short input_v);
@@ -74,6 +74,7 @@ class Neuron
 	Neuron *setNet(NeuralNet *owner);
 	Neuron *setupDendrites();
 	Neuron *setupAxon();
+	int handleDendriticBulge(float bulge);
 	int numberOfConnections();
 	int fire(short input_v);
 };
@@ -84,6 +85,7 @@ class NeuralNet
 	vector< vector<Neuron> > neurons;
 
 	NeuralNet(int x = 100, int y = 100);
+	int handleDendriticBulge(Neuron *n, float bulge);
 	void setupNeurons();
 };
 
