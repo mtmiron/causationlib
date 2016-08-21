@@ -1,5 +1,4 @@
 #include <vector>
-#include <map>
 #include <math.h>
 #include <time.h>
 
@@ -17,16 +16,16 @@ class NeuralNet;
 class Dendrite
 {
   private:
-	short delaytime;
-	float seekfactor;
-	short clusterfactor;
-	unsigned int bulge;
-	struct timespec time;
-	Neuron *neuron;
+	short delaytime = 0;
+	float seekfactor = 0;
+	short clusterfactor = 0;
+	unsigned int bulge = 0;
+	struct timespec time = { 0 };
+	Neuron *neuron = NULL;
 
   public:
-	Dendrite(short delay = 0, float seek = 1.0, short cluster = 1);
-	Dendrite *setNeuron(Neuron *owner);
+	Dendrite(short delay = 0, float seek = 0.1, short cluster = 1);
+	Neuron *setNeuron(Neuron *owner);
 
 	int fire(short input_v);
 	int grow(short input_v);
@@ -36,16 +35,17 @@ class Dendrite
 class Axon
 {
   private:
-	short vesicles;
-	struct timespec time;
-	Neuron *neuron;
+	short vesicles = 0;
+	struct timespec time = { 0 };
+	Neuron *neuron = NULL;
 
 	vector<Dendrite *> d_output;
 	vector<Neuron *> n_output;
 
   public:
-	Axon(short vscls = 0);
+	Axon();
 	Neuron *setNeuron(Neuron *owner);
+	void addDendriteOutput(Dendrite *d);
 	int numberOfConnections();
 	int fire(short input_v);
 };
@@ -60,8 +60,8 @@ class Neuron
 	short resting_v = -80;
 	short action_v = -30;
 	short fire_v = 50;
-	struct timespec time;
-	NeuralNet *net;
+	struct timespec time = { 0 };
+	NeuralNet *net = NULL;
 
   protected:
 	Axon axon;
@@ -70,13 +70,16 @@ class Neuron
   public:
 	Neuron(short reftime = 50, short excitetime = 20, short refv = -50,
 			short rest_v = -80, short act_v = -30, short firev = 50);
-
+	Neuron(int xarg, int yarg);
 	Neuron *setNet(NeuralNet *owner);
 	Neuron *setupDendrites();
 	Neuron *setupAxon();
+	void addConnection(Neuron *n);
 	int handleDendriticBulge(float bulge);
 	int numberOfConnections();
 	int fire(short input_v);
+	int x = 0;
+	int y = 0;
 };
 
 class NeuralNet
