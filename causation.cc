@@ -106,14 +106,14 @@ int visual_iter(struct timespec &event)
 	}
 
 	// Calculate change in matrix magnitude for each video channel
-	for (int i = 0; i < vidFrame.size(); i++) {
+	for (uint i = 0; i < vidFrame.size(); i++) {
 		delta[i] = abs(cur_norm[i] - old_norm[i]);
 		if (options.show_visual_norms)
 			std::cout << visual_channel_map[i] << "\t" << cur_norm[i] << " \t " << delta[i] << std::endl;
 	}
 
 	// Track any sudden changes in our entire field of vision (from last call to this one)
-	for (int i = 0; i < vidFrame.size(); i++) {
+	for (uint i = 0; i < vidFrame.size(); i++) {
 		old_norm[i] = cur_norm[i];
 		if ( (cur_norm[i] * 0.10) <= delta[i] ) {
 			event_took_place = i;
@@ -124,7 +124,7 @@ int visual_iter(struct timespec &event)
 	}
 
 	// Do extra processing on visual channels of interest
-	for (int i = 0; i < (sizeof(processed_visual_channels) / sizeof(*processed_visual_channels)); i++)
+	for (uint i = 0; i < (sizeof(processed_visual_channels) / sizeof(*processed_visual_channels)); i++)
 		visual_processing(vidFrame[processed_visual_channels[i]]);
 
 	if (options.show_images) {
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
 
 	while (true)
 	{
-		if (visual_event_on_channel = visual_iter(event_times[0])) {
+		if ( (visual_event_on_channel = visual_iter(event_times[0])) ) {
 			std::cout << "visual event on channel " << visual_event_on_channel
 				<< " at " << event_times[0].tv_sec << "." << event_times[0].tv_nsec << std::endl;
 			if (options.show_visual_norms) {
