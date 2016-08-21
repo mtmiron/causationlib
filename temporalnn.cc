@@ -112,7 +112,6 @@ Neuron *Neuron::setupAxon()
 
 int Neuron::numberOfConnections()
 {
-	return 50;
 	return axon.numberOfConnections();
 }
 
