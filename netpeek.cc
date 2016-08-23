@@ -26,8 +26,8 @@ int main(int argc, char **argv)
 
 	image = createImageFromNet(*net, 800, 600);
 
-	namedWindow("Neural Net", CV_WINDOW_AUTOSIZE);
-	imshow("Neural Net", image);
+	namedWindow("Neural Net: connection densities", CV_WINDOW_AUTOSIZE);
+	imshow("Neural Net: connection densities", image);
 
 	while (unsigned char key = waitKey(0))
 		if (key == 27)
