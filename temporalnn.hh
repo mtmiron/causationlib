@@ -15,12 +15,13 @@ class NeuralNet;
 
 class Dendrite
 {
+  friend class NeuralNet;
   private:
 	short delaytime = 0;
-	float seekfactor = 0;
+	double seekfactor = 0;
 	short clusterfactor = 0;
-	unsigned int bulge = 0;
-	struct timespec time = { 0 };
+	double bulge = 0;
+	struct timespec firetime = { 0 };
 	Neuron *neuron = NULL;
 
   public:
@@ -34,9 +35,10 @@ class Dendrite
 
 class Axon
 {
+  friend class NeuralNet;
   private:
 	short vesicles = 0;
-	struct timespec time = { 0 };
+	struct timespec firetime = { 0 };
 	Neuron *neuron = NULL;
 
 	vector<Dendrite *> d_output;
@@ -53,19 +55,25 @@ class Axon
 
 class Neuron
 {
+  friend class NeuralNet;
+  friend class Dendrite;
+  friend class Axon;
   private:
-	short refractory_time = 2;
-	short excited_time = 20;
+	short refractory_time = 20;
+	short excited_time = 2;
 	short refractory_v = -50;
 	short resting_v = -80;
 	short action_v = -30;
 	short fire_v = 50;
-	struct timespec time = { 0 };
+	int x = 0;
+	int y = 0;
+	struct timespec firetime = { 0 };
 	NeuralNet *net = NULL;
 
   protected:
 	Axon axon;
 	vector<Dendrite> dendrites;
+	int fire(short input_v);
 
   public:
 	Neuron(short reftime = 50, short excitetime = 20, short refv = -50,
@@ -75,11 +83,9 @@ class Neuron
 	Neuron *setupDendrites();
 	Neuron *setupAxon();
 	void addConnection(Neuron *n);
-	int handleDendriticBulge(float bulge);
+	int handleDendriticBulge(double bulge);
 	int numberOfConnections();
-	int fire(short input_v);
-	int x = 0;
-	int y = 0;
+	int input(short input_v = 1);
 };
 
 class NeuralNet
@@ -88,7 +94,7 @@ class NeuralNet
 	vector< vector<Neuron> > neurons;
 
 	NeuralNet(int x = 100, int y = 100);
-	int handleDendriticBulge(Neuron *n, float bulge);
+	int handleDendriticBulge(Neuron *n, double bulge);
 	void setupNeurons();
 };
 
