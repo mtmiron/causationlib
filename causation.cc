@@ -96,7 +96,10 @@ int visual_iter(struct timespec &event)
 	int event_took_place = false;
 
 	if (!cam.isOpened())
-		throw "failed to open camera";
+	{
+		cerr << "unable to open camera" << endl;
+		abort();
+	}
 
 	cam.grab();
 	for (int i = 0; i < NUMVCHANNELS; i++)
