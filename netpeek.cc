@@ -6,6 +6,7 @@
 #define DEFAULT_STEP_SIZE 2
 #define DEFAULT_NET_HEIGHT 480
 #define DEFAULT_NET_WIDTH 320
+#define DEFAULT_LOOP_TIME 100
 
 using namespace TemporalNet;
 using namespace std;
@@ -16,6 +17,7 @@ struct options {
 	int stepsize;
 	int height;
 	int width;
+	int loop_time;
 	int input_strength;
 	bool no_density_image;
 	bool no_activity_image;
@@ -32,13 +34,15 @@ void print_help(char **argv)
 \t\t-y OPT\tHeight of neural net\n\
 \t\t-s OPT\tStep size for neuron input loop\n\
 \t\t-i OPT\tSet the input strength to each neuron\n\
+\t\t-l OPT\tSet the wait time between wave-input iterations\n\
 \n", *argv);
 	exit(0);
 }
 
 struct options parse_args(int argc, char **argv)
 {
-	struct options options = { DEFAULT_STEP_SIZE, DEFAULT_NET_HEIGHT, DEFAULT_NET_WIDTH };
+	struct options options = { DEFAULT_STEP_SIZE, DEFAULT_NET_HEIGHT, DEFAULT_NET_WIDTH,
+								DEFAULT_LOOP_TIME };
 	int c = 0;
 
 	while ((c = getopt(argc, argv, "x:y:hs:dai:")) != -1)
@@ -65,6 +69,9 @@ struct options parse_args(int argc, char **argv)
 		case 'i':
 			options.input_strength = atoi(optarg);
 			break;
+		case 'l':
+			options.loop_time = atoi(optarg);
+			break;
 		}
 	}
 	return options;
@@ -74,20 +81,25 @@ int main(int argc, char **argv)
 {
 	NeuralNet *net;
 	Mat densities_image, activity_image;
+	struct timespec at_time = { 0 };
 	struct options options = parse_args(argc, argv);
 
 	fprintf(stdout, "Key bindings: ESC == exit :)\n"
-			"Neuron input strength: %d  Neuron step size: %d  Net height: %d  Net width: %d\n",
-			options.input_strength, options.stepsize, options.height, options.width);
+			"Neuron input strength: %d  Neuron step size: %d  Net height: %d  Net width: %d  "
+			"Firing wave loop time: %d\n",
+			options.input_strength, options.stepsize, options.height, options.width,
+			options.loop_time);
 
 	net = new NeuralNet(options.width, options.height);
 	net->setupNeurons();
 
-	for (uchar key = 0; key != 27; key = waitKey(100))
+	for (uchar key = 0; key != 27; key = waitKey(options.loop_time))
 	{
-		for (int i = 10; i < net->neurons.size() - 10; i += options.stepsize)
-			for (int j = 10; j < net->neurons[i].size() - 10; j += options.stepsize)
-				net->neurons[i][j].input(options.input_strength);
+		clock_gettime(CLOCK_REALTIME, &at_time);
+
+		for (uint i = 10; i < net->neurons.size() - 10; i += options.stepsize)
+			for (uint j = 10; j < net->neurons[i].size() - 10; j += options.stepsize)
+				net->neurons[i][j].input(options.input_strength, at_time);
 
 		if (!options.no_density_image) {
 			densities_image = net->createConnectionDensityImage(800, 600);
