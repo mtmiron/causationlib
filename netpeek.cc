@@ -1,6 +1,8 @@
-#include "nnvisualizer.hh"
 #include <unistd.h>
 #include <iostream>
+#include "temporalnn.hh"
+#include <opencv2/highgui.hpp>
+
 
 using namespace TemporalNet;
 using namespace std;
@@ -9,7 +11,7 @@ using namespace cv;
 int main(int argc, char **argv)
 {
 	NeuralNet *net;
-	Mat image;
+	Mat densities_image, activity_image;
 
 	if (argc < 3)
 		net = new NeuralNet(600,800);
@@ -18,20 +20,20 @@ int main(int argc, char **argv)
 
 
 	net->setupNeurons();
-	for (int loop = 0; loop < 100; loop++)
-		for (int i = 100; i < 150; i++)
-			for (int j = 100; j < 150; j++)
+	namedWindow("connection densities", CV_WINDOW_AUTOSIZE);
+	namedWindow("current activity", CV_WINDOW_AUTOSIZE);
+	for (uchar key = 0; key != 27; key = waitKey(1))
+	{
+		for (int i = 100; i < 110; i++)
+			for (int j = 100; j < 110; j++)
 				net->neurons[i][j].input();
 
+		densities_image = net->createConnectionDensityImage(800, 600);
+		imshow("connection densities", densities_image);
 
-	image = createImageFromNet(*net, 800, 600);
-
-	namedWindow("Neural Net: connection densities", CV_WINDOW_AUTOSIZE);
-	imshow("Neural Net: connection densities", image);
-
-	while (unsigned char key = waitKey(0))
-		if (key == 27)
-			break;
+		activity_image = net->createCurrentActivityImage(800, 600);
+		imshow("current activity", activity_image);
+	}
 
 	return 0;
 }

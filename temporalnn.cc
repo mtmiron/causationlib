@@ -6,17 +6,27 @@ namespace TemporalNet {
 using namespace std;
 
 
-long nano_to_milli(long nano)
+long long nano_to_milli(long long nano)
 
 {
 	return nano / pow(10, 6);
 }
 
-long milli_to_nano(long milli)
+long long milli_to_nano(long long milli)
 {
 	return milli * pow(10, 6);
 }
 
+long long timespec_minus(struct timespec &time1, struct timespec &time2)
+{
+	long long ret;
+
+	ret = time1.tv_sec - time2.tv_sec;
+	ret *= 1000;
+	ret += (nano_to_milli(time1.tv_nsec) - nano_to_milli(time2.tv_nsec));
+
+	return ret;
+}
 
 
 /*
@@ -58,7 +68,7 @@ Axon::Axon()
 {
 	n_output = vector<Neuron *>(0);
 	d_output = vector<Dendrite *>(0);
-	clock_gettime(CLOCK_REALTIME, &firetime);
+//	clock_gettime(CLOCK_REALTIME, &firetime);
 }
 
 Neuron *Axon::setNeuron(Neuron *owner)
@@ -83,19 +93,19 @@ void Axon::addDendriteOutput(Dendrite *d)
 
 int Axon::fire(short input_v)
 {
-	long n_dconnections = d_output.size();
-	long n_nconnections = n_output.size();
-	short dist_voltage = input_v / n_dconnections;
+	ulong n_dconnections = d_output.size();
+	ulong n_nconnections = n_output.size();
+	short dist_voltage = input_v / (n_dconnections ? n_dconnections : 1);
 
 	if (n_dconnections == 0 && n_nconnections == 0)
 		return -1;
-	for (int i = 0; i < n_dconnections; i++)
+	for (uint i = 0; i < n_dconnections; i++)
 		d_output[i]->fire(dist_voltage);
 	/*
 	 * Assume directly connected neurons indicate a "predetermined," strong correlation
 	 * by exciting them with a full strength input (TODO: model neurotransmitter synapses.)
 	 */
-	for (int i = 0; i < n_nconnections; i++)
+	for (uint i = 0; i < n_nconnections; i++)
 		n_output[i]->fire(input_v);
 
 	return 0;
@@ -112,7 +122,7 @@ Neuron::Neuron(short reftime, short excitetime, short refv, short rest_v,
 		  axon()
 {
 	dendrites.push_back(Dendrite());
-	clock_gettime(CLOCK_REALTIME, &firetime);
+//	clock_gettime(CLOCK_REALTIME, &firetime);
 }
 
 Neuron::Neuron(int xarg, int yarg)
@@ -120,7 +130,7 @@ Neuron::Neuron(int xarg, int yarg)
 	x = xarg;
 	y = yarg;
 	dendrites.push_back(Dendrite());
-	clock_gettime(CLOCK_REALTIME, &firetime);
+//	clock_gettime(CLOCK_REALTIME, &firetime);
 }
 
 Neuron *Neuron::setNet(NeuralNet *owner)
@@ -149,11 +159,11 @@ int Neuron::numberOfConnections()
 int Neuron::fire(short input_v)
 {
 	static short voltage = resting_v;
-	long time_delta = 0;
+	uint time_delta = 0;
 	struct timespec nowtime;
 
 	clock_gettime(CLOCK_REALTIME, &nowtime);
-	time_delta = nano_to_milli(nowtime.tv_nsec) - nano_to_milli(firetime.tv_nsec);
+	time_delta = (uint)timespec_minus(nowtime, firetime);
 
 	// TODO: don't make assumptions about CPU capabilities to handle real-time events.
 	if (time_delta > excited_time)
@@ -162,8 +172,10 @@ int Neuron::fire(short input_v)
 		return -1;
 	voltage += input_v;
 
-	if (voltage >= fire_v) {
+	if (voltage >= action_v) {
 		axon.fire(fire_v);
+		firetime.tv_sec = nowtime.tv_sec;
+		firetime.tv_nsec = nowtime.tv_nsec;
 	} else {
 		for (uint i = 0; i < dendrites.size(); i++)
 			dendrites[i].grow(input_v);
