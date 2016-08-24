@@ -12,6 +12,7 @@ Mat NeuralNet::createConnectionDensityImage(int height, int width)
 	Vec3b color(1,0,1);
 	int x = this->neurons.size();
 	int y = this->neurons[0].size();
+	int nconns = 0;
 	float x_pos = 0;
 	float y_pos = 0;
 
@@ -20,7 +21,12 @@ Mat NeuralNet::createConnectionDensityImage(int height, int width)
 
 	for (int i = 0; i < x; i++)
 		for (int j = 0; j < y; j++)
-			image.at<Vec3b>( MIN(round(i * x_pos), width - 1), MIN(round(j * y_pos), height - 1) ) = color * this->neurons[i][j].numberOfConnections();
+		{
+			nconns = this->neurons[i][j].numberOfConnections();
+			if (nconns == 0)
+				continue;
+			image.at<Vec3b>( MIN(round(i * x_pos), width - 1), MIN(round(j * y_pos), height - 1) ) = color * nconns;
+		}
 
 	return image;
 }
@@ -47,7 +53,7 @@ Mat NeuralNet::createCurrentActivityImage(int height, int width)
 			if (this->neurons[i][j].firetime.tv_sec == 0)
 				continue;
 			diff = (uint)(timespec_minus(nowtime, this->neurons[i][j].firetime));
-			color = basecolor / diff;
+			color = basecolor / MAX(1, diff);
 			image.at<Vec3b>( MIN(round(i * x_pos), width - 1), MIN(round(j * y_pos), height - 1) ) = color;
 		}
 
