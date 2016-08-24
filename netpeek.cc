@@ -20,8 +20,8 @@ int main(int argc, char **argv)
 
 
 	net->setupNeurons();
-	namedWindow("connection densities", CV_WINDOW_AUTOSIZE);
 	namedWindow("current activity", CV_WINDOW_AUTOSIZE);
+	namedWindow("connection densities", CV_WINDOW_AUTOSIZE);
 	for (uchar key = 0; key != 27; key = waitKey(1))
 	{
 		for (int i = 100; i < 110; i++)

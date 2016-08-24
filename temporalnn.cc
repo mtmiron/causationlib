@@ -170,12 +170,12 @@ int Neuron::fire(short input_v)
 		voltage = resting_v;
 	if (time_delta <= refractory_time)
 		return -1;
-	voltage += input_v;
 
+	firetime.tv_sec = nowtime.tv_sec;
+	firetime.tv_nsec = nowtime.tv_nsec;
+	voltage += input_v;
 	if (voltage >= action_v) {
 		axon.fire(fire_v);
-		firetime.tv_sec = nowtime.tv_sec;
-		firetime.tv_nsec = nowtime.tv_nsec;
 	} else {
 		for (uint i = 0; i < dendrites.size(); i++)
 			dendrites[i].grow(input_v);
