@@ -9,7 +9,7 @@ using namespace std;
 Mat NeuralNet::createConnectionDensityImage(int height, int width)
 {
 	Mat image(width, height, CV_8UC3, Vec3b(0,0,0));
-	Vec3b color(10,0,10);
+	Vec3b color(1,0,1);
 	int x = this->neurons.size();
 	int y = this->neurons[0].size();
 	float x_pos = 0;
