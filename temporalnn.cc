@@ -108,7 +108,7 @@ int Axon::fire(short input_v)
 	for (uint i = 0; i < n_nconnections; i++)
 		n_output[i]->fire(input_v);
 
-	return 0;
+	return dist_voltage;
 }
 
 
@@ -156,31 +156,35 @@ int Neuron::numberOfConnections()
 	return axon.numberOfConnections();
 }
 
-int Neuron::fire(short input_v)
+// Returns 1 if dendrites grew, -1 if we didn't fire due to refractory period,
+// and the passed-forward voltage change (distributed among connections) otherwise
+int Neuron::fire(short input_v, struct timespec at_time)
 {
 	static short voltage = resting_v;
-	uint time_delta = 0;
-	struct timespec nowtime;
+	unsigned int time_delta = (uint)timespec_minus(at_time, firetime);
 
-	clock_gettime(CLOCK_REALTIME, &nowtime);
-	time_delta = (uint)timespec_minus(nowtime, firetime);
-
-	// TODO: don't make assumptions about CPU capabilities to handle real-time events.
 	if (time_delta > excited_time)
 		voltage = resting_v;
 	if (time_delta <= refractory_time)
 		return -1;
 
-	firetime.tv_sec = nowtime.tv_sec;
-	firetime.tv_nsec = nowtime.tv_nsec;
+	firetime = at_time;
 	voltage += input_v;
 	if (voltage >= action_v) {
-		axon.fire(fire_v);
+		return axon.fire(fire_v);
 	} else {
 		for (uint i = 0; i < dendrites.size(); i++)
 			dendrites[i].grow(input_v);
+		return 1;
 	}
-	return 0;
+}
+
+int Neuron::fire(short input_v)
+{
+	struct timespec time;
+
+	clock_gettime(CLOCK_REALTIME, &time);
+	return fire(input_v, time);
 }
 
 void Neuron::addConnection(Neuron *n)
@@ -188,12 +192,6 @@ void Neuron::addConnection(Neuron *n)
 	axon.addDendriteOutput(&n->dendrites[0]);
 }
 
-/* 
- * The point is that if we're firing without input, then
- * we're out of sync and useless.  The more we fire independently,
- * the more we seek the input of other action potentials to sync
- * with.
- */
 int Neuron::handleDendriticBulge(double bulge)
 {
 	return net->handleDendriticBulge(this, bulge);
@@ -204,6 +202,10 @@ int Neuron::input(short input_v)
 	return fire(input_v);
 }
 
+int Neuron::input(short input_v, struct timespec at_time)
+{
+	return fire(input_v, at_time);
+}
 
 /*
  * class NeuralNet
@@ -213,6 +215,12 @@ NeuralNet::NeuralNet(int x, int y)
 	neurons.resize(x, vector<Neuron>(y, Neuron()));
 }
 
+/* 
+ * The point is that if we're firing without input, then
+ * we're out of sync and useless.  The more we fire independently,
+ * the more we seek the input of other action potentials to sync
+ * with.
+ */
 int NeuralNet::handleDendriticBulge(Neuron *n, double bulge)
 {
 	uint xpos = (uint)n->x;

@@ -4,6 +4,12 @@
 #include <opencv2/core.hpp>
 
 
+/*
+ * Inheritance is lovely and all, but with something as conceptually complex
+ * (and as much a design-in-progress) as this is, encapsulation via scope & friend
+ * classes is the more flexible option in my mind.  For a learning project, clarity
+ * takes precedence over maintainability and extensibility.
+ */
 namespace TemporalNet {
 using namespace std;
 
@@ -18,27 +24,26 @@ long long timespec_minus(struct timespec &time1, struct timespec &time2);
 
 class Dendrite
 {
-  friend class NeuralNet;
+  friend class Neuron;
+  friend class Axon;
   private:
 	short delaytime = 0;
 	double seekfactor = 0;
 	short clusterfactor = 0;
 	double bulge = 0;
 	struct timespec firetime = { 0 };
+	int fire(short input_v);
+	int grow(short input_v);
 	Neuron *neuron = NULL;
 
   public:
 	Dendrite(short delay = 0, float seek = 0.1, short cluster = 1);
 	Neuron *setNeuron(Neuron *owner);
-
-	int fire(short input_v);
-	int grow(short input_v);
 };
 
 
 class Axon
 {
-  friend class NeuralNet;
   private:
 	short vesicles = 0;
 	struct timespec firetime = { 0 };
@@ -63,8 +68,8 @@ class Neuron
   friend class Axon;
   private:
   	// In milliseconds
-	short refractory_time = 20;
-	short excited_time = 5;
+	unsigned short refractory_time = 20;
+	unsigned short excited_time = 5;
 	short refractory_v = -50;
 	short resting_v = -80;
 	short action_v = -30;
@@ -78,6 +83,7 @@ class Neuron
 	Axon axon;
 	vector<Dendrite> dendrites;
 	int fire(short input_v = 50);
+	int fire(short input_v, struct timespec at_time);
 
   public:
 	Neuron(short reftime = 50, short excitetime = 20, short refv = -50,
@@ -90,6 +96,7 @@ class Neuron
 	int handleDendriticBulge(double bulge);
 	int numberOfConnections();
 	int input(short input_v = 1);
+	int input(short input_v, struct timespec at_time);
 };
 
 class NeuralNet
@@ -101,7 +108,7 @@ class NeuralNet
 	int handleDendriticBulge(Neuron *n, double bulge);
 	void setupNeurons();
 	cv::Mat createConnectionDensityImage(int height, int width);
-	cv::Mat createCurrentActivityImage(int height, int width);
+	cv::Mat createCurrentActivityImage(int height, int width, struct timespec at_time = { 0 });
 };
 
 } // namespace

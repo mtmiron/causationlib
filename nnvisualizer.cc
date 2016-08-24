@@ -31,7 +31,7 @@ Mat NeuralNet::createConnectionDensityImage(int height, int width)
 	return image;
 }
 
-Mat NeuralNet::createCurrentActivityImage(int height, int width)
+Mat NeuralNet::createCurrentActivityImage(int height, int width, struct timespec at_time)
 {
 	Mat image(width, height, CV_8UC3, Vec3b(0,0,0));
 	Vec3b basecolor(0,0,255);
@@ -41,18 +41,18 @@ Mat NeuralNet::createCurrentActivityImage(int height, int width)
 	float x_pos = 0;
 	float y_pos = 0;
 	int diff = 0;
-	struct timespec nowtime = { 0 };
 
 	x_pos = ((float)width / x);
 	y_pos = ((float)width / y);
-	clock_gettime(CLOCK_REALTIME, &nowtime);
+	if (at_time.tv_sec == 0 && at_time.tv_nsec == 0)
+		clock_gettime(CLOCK_REALTIME, &at_time);
 
 	for (int i = 0; i < x; i++)
 		for (int j = 0; j < y; j++)
 		{
 			if (this->neurons[i][j].firetime.tv_sec == 0)
 				continue;
-			diff = (uint)(timespec_minus(nowtime, this->neurons[i][j].firetime));
+			diff = (uint)(timespec_minus(at_time, this->neurons[i][j].firetime));
 			color = basecolor / MAX(1, diff);
 			image.at<Vec3b>( MIN(round(i * x_pos), width - 1), MIN(round(j * y_pos), height - 1) ) = color;
 		}
