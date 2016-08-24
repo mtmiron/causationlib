@@ -61,7 +61,7 @@ int main(int argc, char **argv)
 	Mat densities_image, activity_image;
 
 	options = parse_args(argc, argv);
-	fprintf(stdout, "Neuron step size: %d  Net height: %d  Net width: %d\n",
+	fprintf(stdout, "Neuron step size: %d  Net height: %d  Net width: %d\n** HIT ESCAPE TO EXIT :) **\n",
 			options.stepsize, options.height, options.width);
 
 	net = new NeuralNet(options.width, options.height);
