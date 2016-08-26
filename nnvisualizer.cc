@@ -43,7 +43,7 @@ Mat NeuralNet::createCurrentActivityImage(int height, int width, struct timespec
 	int diff = 0;
 
 	x_pos = ((float)width / x);
-	y_pos = ((float)width / y);
+	y_pos = ((float)height / y);
 	if (at_time.tv_sec == 0 && at_time.tv_nsec == 0)
 		clock_gettime(CLOCK_REALTIME, &at_time);
 
@@ -53,7 +53,7 @@ Mat NeuralNet::createCurrentActivityImage(int height, int width, struct timespec
 			if (this->neurons[i][j].firetime.tv_sec == 0)
 				continue;
 			diff = (uint)(timespec_minus(at_time, this->neurons[i][j].firetime));
-			color = basecolor / MAX(1, diff);
+			color = basecolor / MAX(1, diff / this->neurons[i][j].excited_time);
 			image.at<Vec3b>( MIN(round(i * x_pos), width - 1), MIN(round(j * y_pos), height - 1) ) = color;
 		}
 
