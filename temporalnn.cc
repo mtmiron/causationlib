@@ -6,14 +6,34 @@ namespace TemporalNet {
 using namespace std;
 
 
-long long nano_to_milli(long long nano)
+long long unsigned nano_to_milli(long long unsigned nano)
 {
 	return nano / pow(10, 6);
 }
 
-long long milli_to_nano(long long milli)
+long long unsigned milli_to_nano(long long unsigned milli)
 {
 	return milli * pow(10, 6);
+}
+
+struct timespec ms_to_timespec(long long unsigned ltime)
+{
+	struct timespec ret = { 0 };
+
+	ret.tv_sec = ltime / 1000;
+	ret.tv_nsec = milli_to_nano(ltime % 1000);
+
+	return ret;
+}
+
+long long unsigned timespec_to_ms(struct timespec time)
+{
+	long long ret = 0;
+
+	ret += time.tv_sec * 1000;
+	ret += nano_to_milli(time.tv_nsec);
+
+	return ret;
 }
 
 long long timespec_minus(struct timespec &time1, struct timespec &time2)
@@ -27,6 +47,16 @@ long long timespec_minus(struct timespec &time1, struct timespec &time2)
 	return ret;
 }
 
+long long timespec_plus(struct timespec &time1, struct timespec &time2)
+{
+	long long unsigned ret;
+
+	ret = time1.tv_sec + time2.tv_sec;
+	ret *= 1000;
+	ret += (nano_to_milli(time1.tv_nsec) + nano_to_milli(time2.tv_nsec));
+
+	return ret;
+}
 
 /*
  * class Dendrite
@@ -44,7 +74,7 @@ Neuron *Dendrite::setNeuron(Neuron *owner)
 	return neuron;
 }
 
-int Dendrite::fire(short input_v)
+int Dendrite::input(short input_v)
 {
 	return neuron->input(input_v);
 }
@@ -87,6 +117,15 @@ void Axon::addDendriteOutput(Dendrite *d)
 	d_output.push_back(d);
 }
 
+void Axon::addNeuronOutput(Neuron *n)
+{
+	for (auto it = n_output.begin(); it != n_output.end(); it++)
+		if (*it == n)
+			return;
+
+	n_output.push_back(n);
+}
+
 int Axon::fire(short input_v)
 {
 	ulong n_dconnections = d_output.size();
@@ -96,7 +135,7 @@ int Axon::fire(short input_v)
 	if (n_dconnections == 0 && n_nconnections == 0)
 		return -1;
 	for (uint i = 0; i < n_dconnections; i++)
-		d_output[i]->fire(dist_voltage);
+		d_output[i]->input(dist_voltage);
 	/*
 	 * Assume directly connected neurons indicate a "predetermined," strong correlation
 	 * by exciting them with a full strength input (TODO: model neurotransmitter synapses.)
@@ -173,9 +212,14 @@ int Neuron::fire()
 	return input(abs(voltage - action_v));
 }
 
-void Neuron::addConnection(Neuron *n)
+void Neuron::addDendriteOutput(Neuron *n)
 {
 	axon.addDendriteOutput(&n->dendrites[0]);
+}
+
+void Neuron::addNeuronOutput(Neuron *n)
+{
+	axon.addNeuronOutput(n);
 }
 
 int Neuron::handleDendriticBulge(double bulge)
@@ -209,7 +253,7 @@ int NeuralNet::handleDendriticBulge(Neuron *n, double bulge)
 	for (int i = 0; i <= scale; i++)
 		for (int j = 0; j <= scale; j++)
 			if (xpos + i < neurons.size() && ypos + j < neurons[xpos + i].size())
-				neurons[xpos + i][ypos + j].addConnection(n);
+				neurons[xpos + i][ypos + j].addDendriteOutput(n);
 	return n->numberOfConnections();
 }
 
@@ -224,6 +268,15 @@ void NeuralNet::setupNeurons()
 			neurons[i][j].x = i;
 			neurons[i][j].y = j;
 		}
+}
+
+void NeuralNet::connectTo(NeuralNet *net)
+{
+	for (uint i = 0; i < this->neurons.size(); i++)
+		for (uint j = 0; j < this->neurons[i].size(); j++)
+			if (net->neurons.size() < i && net->neurons[i].size() < j)
+				this->neurons[i][j].addNeuronOutput(&net->neurons[i][j]);
+	return;
 }
 
 } // namespace

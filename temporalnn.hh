@@ -17,9 +17,12 @@ class Neuron;
 class NeuralNet;
 
 
-long long nano_to_milli(long long nano);
-long long milli_to_nano(long long milli);
+long long unsigned nano_to_milli(long long unsigned nano);
+long long unsigned milli_to_nano(long long unsigned milli);
+long long unsigned timespec_to_ms(struct timespec time);
 long long timespec_minus(struct timespec &time1, struct timespec &time2);
+long long timespec_plus(struct timespec &time1, struct timespec &time2);
+struct timespec ms_to_timespec(long long unsigned ltime);
 
 
 class Dendrite
@@ -32,7 +35,7 @@ class Dendrite
 	short clusterfactor = 0;
 	double bulge = 0;
 	struct timespec firetime = { 0 };
-	int fire(short input_v);
+	int input(short input_v);
 	int grow(short input_v);
 	Neuron *neuron = NULL;
 
@@ -56,6 +59,7 @@ class Axon
 	Axon();
 	Neuron *setNeuron(Neuron *owner);
 	void addDendriteOutput(Dendrite *d);
+	void addNeuronOutput(Neuron *n);
 	int numberOfConnections();
 	int fire(short input_v);
 };
@@ -84,13 +88,15 @@ class Neuron
 	Axon axon;
 	vector<Dendrite> dendrites;
 
+	void addNeuronOutput(Neuron *n);
+	void addDendriteOutput(Neuron *n);
+
   public:
 	Neuron();
 	Neuron(int xarg, int yarg);
 	Neuron *setNet(NeuralNet *owner);
 	Neuron *setupDendrites();
 	Neuron *setupAxon();
-	void addConnection(Neuron *n);
 	int handleDendriticBulge(double bulge);
 	int numberOfConnections();
 	int input(short input_v = 1);
@@ -108,6 +114,7 @@ class NeuralNet
 	void setupNeurons();
 	cv::Mat createConnectionDensityImage(int height, int width);
 	cv::Mat createCurrentActivityImage(int height, int width, struct timespec at_time = { 0 });
+	void connectTo(NeuralNet *net);
 };
 
 } // namespace
