@@ -6,6 +6,9 @@ namespace TemporalNet {
 using namespace std;
 
 
+/*
+ * Time ops
+ */
 long long unsigned nano_to_milli(long long unsigned nano)
 {
 	return nano / pow(10, 6);
@@ -36,7 +39,7 @@ long long unsigned timespec_to_ms(struct timespec time)
 	return ret;
 }
 
-long long timespec_minus(struct timespec &time1, struct timespec &time2)
+struct timespec timespec_minus(struct timespec &time1, struct timespec &time2)
 {
 	long long ret;
 
@@ -44,10 +47,10 @@ long long timespec_minus(struct timespec &time1, struct timespec &time2)
 	ret *= 1000;
 	ret += (nano_to_milli(time1.tv_nsec) - nano_to_milli(time2.tv_nsec));
 
-	return ret;
+	return ms_to_timespec(ret);
 }
 
-long long timespec_plus(struct timespec &time1, struct timespec &time2)
+struct timespec timespec_plus(struct timespec &time1, struct timespec &time2)
 {
 	long long unsigned ret;
 
@@ -55,8 +58,19 @@ long long timespec_plus(struct timespec &time1, struct timespec &time2)
 	ret *= 1000;
 	ret += (nano_to_milli(time1.tv_nsec) + nano_to_milli(time2.tv_nsec));
 
-	return ret;
+	return ms_to_timespec(ret);
 }
+
+long long timespec_plus(struct timespec &time, long long ms)
+{
+	return timespec_to_ms(time) + ms;
+}
+
+long long timespec_minus(struct timespec &time, long long ms)
+{
+	return timespec_to_ms(time) - ms;
+}
+
 
 /*
  * class Dendrite
@@ -126,7 +140,7 @@ void Axon::addNeuronOutput(Neuron *n)
 	n_output.push_back(n);
 }
 
-int Axon::fire(short input_v)
+int Axon::fire(short input_v, struct timespec at_time)
 {
 	ulong n_dconnections = d_output.size();
 	ulong n_nconnections = n_output.size();
@@ -188,7 +202,7 @@ int Neuron::numberOfConnections()
 
 int Neuron::input(short input_v, struct timespec at_time)
 {
-	unsigned int time_delta = (uint)timespec_minus(at_time, firetime);
+	long long time_delta = timespec_to_ms(timespec_minus(at_time, firetime));
 
 	if (time_delta > excited_time)
 		voltage = resting_v;
