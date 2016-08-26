@@ -6,7 +6,7 @@
 #define DEFAULT_STEP_SIZE 10
 #define DEFAULT_NET_HEIGHT 600
 #define DEFAULT_NET_WIDTH 800
-#define DEFAULT_LOOP_TIME 100
+#define DEFAULT_LOOP_TIME 10
 #define DEFAULT_INPUT_STRENGTH 50
 
 using namespace TemporalNet;
