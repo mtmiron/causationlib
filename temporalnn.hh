@@ -68,8 +68,8 @@ class Neuron
   friend class Axon;
   private:
   	// In milliseconds
-	unsigned short refractory_time = 20;
-	unsigned short excited_time = 5;
+	unsigned short refractory_time = 50;
+	unsigned short excited_time = 20;
 	short refractory_v = -50;
 	short resting_v = -80;
 	short action_v = -30;
@@ -82,12 +82,10 @@ class Neuron
   protected:
 	Axon axon;
 	vector<Dendrite> dendrites;
-	int fire(short input_v = 50);
 	int fire(short input_v, struct timespec at_time);
 
   public:
-	Neuron(short reftime = 50, short excitetime = 20, short refv = -50,
-			short rest_v = -80, short act_v = -30, short firev = 50);
+	Neuron();
 	Neuron(int xarg, int yarg);
 	Neuron *setNet(NeuralNet *owner);
 	Neuron *setupDendrites();
@@ -97,6 +95,7 @@ class Neuron
 	int numberOfConnections();
 	int input(short input_v = 1);
 	int input(short input_v, struct timespec at_time);
+	int fire();
 };
 
 class NeuralNet
