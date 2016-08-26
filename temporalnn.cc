@@ -7,7 +7,6 @@ using namespace std;
 
 
 long long nano_to_milli(long long nano)
-
 {
 	return nano / pow(10, 6);
 }
@@ -52,9 +51,7 @@ int Dendrite::fire(short input_v)
 
 int Dendrite::grow(short input_v)
 {
-/* TODO: design it properly, genius.
-	bulge += input_v * seekfactor;
-*/
+//  bulge += input_v * seekfactor;
 	bulge += 1 * seekfactor;
 	return neuron->handleDendriticBulge(bulge);
 }
@@ -68,7 +65,6 @@ Axon::Axon()
 {
 	n_output = vector<Neuron *>(0);
 	d_output = vector<Dendrite *>(0);
-//	clock_gettime(CLOCK_REALTIME, &firetime);
 }
 
 Neuron *Axon::setNeuron(Neuron *owner)
@@ -122,7 +118,6 @@ Neuron::Neuron(short reftime, short excitetime, short refv, short rest_v,
 		  axon()
 {
 	dendrites.push_back(Dendrite());
-//	clock_gettime(CLOCK_REALTIME, &firetime);
 }
 
 Neuron::Neuron(int xarg, int yarg)
@@ -130,7 +125,6 @@ Neuron::Neuron(int xarg, int yarg)
 	x = xarg;
 	y = yarg;
 	dendrites.push_back(Dendrite());
-//	clock_gettime(CLOCK_REALTIME, &firetime);
 }
 
 Neuron *Neuron::setNet(NeuralNet *owner)
@@ -156,8 +150,6 @@ int Neuron::numberOfConnections()
 	return axon.numberOfConnections();
 }
 
-// Returns 1 if dendrites grew, -1 if we didn't fire due to refractory period,
-// and the passed-forward voltage change (distributed among connections) otherwise
 int Neuron::fire(short input_v, struct timespec at_time)
 {
 	static short voltage = resting_v;
@@ -165,18 +157,19 @@ int Neuron::fire(short input_v, struct timespec at_time)
 
 	if (time_delta > excited_time)
 		voltage = resting_v;
-	if (time_delta <= refractory_time)
-		return -1;
-
-	firetime = at_time;
-	voltage += input_v;
-	if (voltage >= action_v) {
-		return axon.fire(fire_v);
-	} else {
+	if (time_delta <= refractory_time) {
 		for (uint i = 0; i < dendrites.size(); i++)
 			dendrites[i].grow(input_v);
-		return 1;
+		return -1;
 	}
+
+	voltage += input_v;
+	if (voltage >= action_v) {
+		firetime = at_time;
+		return axon.fire(fire_v);
+	}
+
+	return 0;
 }
 
 int Neuron::fire(short input_v)
@@ -215,23 +208,16 @@ NeuralNet::NeuralNet(int x, int y)
 	neurons.resize(x, vector<Neuron>(y, Neuron()));
 }
 
-/* 
- * The point is that if we're firing without input, then
- * we're out of sync and useless.  The more we fire independently,
- * the more we seek the input of other action potentials to sync
- * with.
- */
 int NeuralNet::handleDendriticBulge(Neuron *n, double bulge)
 {
 	uint xpos = (uint)n->x;
 	uint ypos = (uint)n->y;
 	int scale = round(bulge);
 
-	for (int i = 1; i <= scale; i++)
-		for (int j = 1; j <= scale; j++)
+	for (int i = 0; i <= scale; i++)
+		for (int j = 0; j <= scale; j++)
 			if (xpos + i < neurons.size() && ypos + j < neurons[xpos + i].size())
 				neurons[xpos + i][ypos + j].addConnection(n);
-
 	return n->numberOfConnections();
 }
 
