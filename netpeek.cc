@@ -39,6 +39,7 @@ void print_help(char *argv)
 		"\t\t-s ARG\tStep size for neuron input loop\n"
 		"\t\t-i ARG\tSet the input strength to each neuron\n"
 		"\t\t-t ARG\tSet the wait time between wave-input iterations\n"
+		"\t\t-l ARG\tNumber of neural nets\n"
 		"\n", argv);
 	exit(0);
 }
@@ -54,9 +55,6 @@ struct options parse_args(int argc, char **argv)
 		switch (c) {
 		case 's':
 			opts.stepsize = atoi(optarg);
-			break;
-		case 'h':
-			print_help(*argv);
 			break;
 		case 'x':
 			opts.width = atoi(optarg);
@@ -79,8 +77,10 @@ struct options parse_args(int argc, char **argv)
 		case 'l':
 			opts.layers = atoi(optarg);
 			break;
+		case 'h':
 		case '?':
-			exit(1);
+		default:
+			print_help(*argv);
 		}
 	}
 	return opts;
@@ -93,6 +93,7 @@ int main(int argc, char **argv)
 	Mat densities_image, activity_image;
 	struct timespec at_time = { 0 };
 	struct options opts = parse_args(argc, argv);
+	char windowname[256] = { 0 };
 
 	fprintf(stdout, "Images are updated every %dms; press ESC to exit\n"
 			"Neuron input strength: %dmV  Neuron step size: %d  Net height: %d  Net width: %d  "
@@ -117,14 +118,19 @@ int main(int argc, char **argv)
 			for (uint j = 10; j < net->neurons[i].size() - 10; j += opts.stepsize)
 				net->neurons[i][j].input(opts.input_strength, at_time);
 
-		if (!opts.no_activity_image) {
-			activity_image = net->createCurrentActivityImage(800, 600, at_time);
-			imshow("firing neurons", activity_image);
-		}
+		for (uint n = 0; n < opts.layers; n++)
+		{
+			 sprintf(windowname, "%d: firing neurons", n);
+			 if (!opts.no_activity_image) {
+				  activity_image = nets[n]->createCurrentActivityImage(480, 360);//, at_time);
+				  imshow(windowname, activity_image);
+			 }
 
-		if (!opts.no_density_image) {
-			densities_image = net->createConnectionDensityImage(800, 600);
-			imshow("connection densities", densities_image);
+			 sprintf(windowname, "%d: connection densities", n);
+			 if (!opts.no_density_image) {
+				  densities_image = nets[n]->createConnectionDensityImage(480, 360);
+				  imshow(windowname, densities_image);
+			 }
 		}
 	}
 
