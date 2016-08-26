@@ -46,7 +46,7 @@ Neuron *Dendrite::setNeuron(Neuron *owner)
 
 int Dendrite::fire(short input_v)
 {
-	return neuron->fire(input_v);
+	return neuron->input(input_v);
 }
 
 int Dendrite::grow(short input_v)
@@ -102,7 +102,7 @@ int Axon::fire(short input_v)
 	 * by exciting them with a full strength input (TODO: model neurotransmitter synapses.)
 	 */
 	for (uint i = 0; i < n_nconnections; i++)
-		n_output[i]->fire(input_v);
+		n_output[i]->input(input_v);
 
 	return dist_voltage;
 }
@@ -112,10 +112,7 @@ int Axon::fire(short input_v)
 /*
  * class Neuron
  */
-Neuron::Neuron(short reftime, short excitetime, short refv, short rest_v,
-		short act_v, short firev) : refractory_time(reftime),excited_time(excitetime),
-		  refractory_v(refv), resting_v(rest_v), action_v(act_v), fire_v(firev),
-		  axon()
+Neuron::Neuron()
 {
 	dendrites.push_back(Dendrite());
 }
@@ -172,12 +169,9 @@ int Neuron::fire(short input_v, struct timespec at_time)
 	return 0;
 }
 
-int Neuron::fire(short input_v)
+int Neuron::fire()
 {
-	struct timespec time;
-
-	clock_gettime(CLOCK_REALTIME, &time);
-	return fire(input_v, time);
+	return input(fire_v);
 }
 
 void Neuron::addConnection(Neuron *n)
@@ -192,7 +186,10 @@ int Neuron::handleDendriticBulge(double bulge)
 
 int Neuron::input(short input_v)
 {
-	return fire(input_v);
+	struct timespec time;
+
+	clock_gettime(CLOCK_REALTIME, &time);
+	return fire(input_v, time);
 }
 
 int Neuron::input(short input_v, struct timespec at_time)
