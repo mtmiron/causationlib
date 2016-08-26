@@ -147,9 +147,8 @@ int Neuron::numberOfConnections()
 	return axon.numberOfConnections();
 }
 
-int Neuron::fire(short input_v, struct timespec at_time)
+int Neuron::input(short input_v, struct timespec at_time)
 {
-	static short voltage = resting_v;
 	unsigned int time_delta = (uint)timespec_minus(at_time, firetime);
 
 	if (time_delta > excited_time)
@@ -171,7 +170,7 @@ int Neuron::fire(short input_v, struct timespec at_time)
 
 int Neuron::fire()
 {
-	return input(fire_v);
+	return input(abs(voltage - action_v));
 }
 
 void Neuron::addConnection(Neuron *n)
@@ -189,13 +188,9 @@ int Neuron::input(short input_v)
 	struct timespec time;
 
 	clock_gettime(CLOCK_REALTIME, &time);
-	return fire(input_v, time);
+	return input(input_v, time);
 }
 
-int Neuron::input(short input_v, struct timespec at_time)
-{
-	return fire(input_v, at_time);
-}
 
 /*
  * class NeuralNet

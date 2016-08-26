@@ -71,6 +71,7 @@ class Neuron
 	unsigned short refractory_time = 50;
 	unsigned short excited_time = 20;
 	short refractory_v = -50;
+	short voltage = -80;
 	short resting_v = -80;
 	short action_v = -30;
 	short fire_v = 50;
@@ -82,7 +83,6 @@ class Neuron
   protected:
 	Axon axon;
 	vector<Dendrite> dendrites;
-	int fire(short input_v, struct timespec at_time);
 
   public:
 	Neuron();
