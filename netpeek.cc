@@ -101,15 +101,12 @@ int main(int argc, char **argv)
 			opts.loop_time, opts.input_strength, opts.stepsize, opts.height,
 			opts.width, opts.loop_time, opts.layers);
 
-	for (uint i = 0; i < opts.layers; i++) {
+	for (uint i = 0; i < opts.layers; i++)
 		nets.push_back(new NeuralNet(opts.width, opts.height));
-		nets[i]->setupNeurons();
-	}
-	for (uint i = 0; i < opts.layers - 1; i++) {
+	for (uint i = 0; i < opts.layers - 1; i++)
 		nets[i]->connectTo(nets[i+1]);
-	}
-	net = nets[0];
 
+	net = nets[0];
 	for (uchar key = 0; key != 27; key = waitKey(opts.loop_time))
 	{
 		clock_gettime(CLOCK_REALTIME, &at_time);
@@ -120,13 +117,13 @@ int main(int argc, char **argv)
 
 		for (uint n = 0; n < opts.layers; n++)
 		{
-			 sprintf(windowname, "%d: firing neurons", n);
+			 sprintf(windowname, "layer #%d: firing neurons", n);
 			 if (!opts.no_activity_image) {
-				  activity_image = nets[n]->createCurrentActivityImage(480, 360);//, at_time);
+				  activity_image = nets[n]->createCurrentActivityImage(480, 360, at_time);
 				  imshow(windowname, activity_image);
 			 }
 
-			 sprintf(windowname, "%d: connection densities", n);
+			 sprintf(windowname, "layer #%d: connection densities", n);
 			 if (!opts.no_density_image) {
 				  densities_image = nets[n]->createConnectionDensityImage(480, 360);
 				  imshow(windowname, densities_image);

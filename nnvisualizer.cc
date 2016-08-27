@@ -31,7 +31,7 @@ Mat NeuralNet::createConnectionDensityImage(int height, int width)
 	return image;
 }
 
-Mat NeuralNet::createCurrentActivityImage(int height, int width, struct timespec at_time)
+Mat NeuralNet::createCurrentActivityImage(int height, int width, struct timespec &at_time)
 {
 	Mat image(width, height, CV_8UC3, Vec3b(0,0,0));
 	Vec3b basecolor(0,0,255);
