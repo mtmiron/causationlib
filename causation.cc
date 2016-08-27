@@ -29,8 +29,7 @@ using namespace TemporalNet;
 "6: CAP_OPENNI_GRAY_IMAGE 	Data given from RGB image generator",
 "7: CAP_OPENNI_IR_IMAGE 	Data given from IR image generator",
 */
-
-static const char* channel_map[] = {
+static const char* visual_channel_map[] = {
 	"CAP_OPENNI_DEPTH_MAP        ",
 	"CAP_OPENNI_POINT_CLOUD_MAP  ",
 	"CAP_OPENNI_DISPARITY_MAP    ",
@@ -103,23 +102,11 @@ int visual_iter(struct timespec &event)
 	}
 
 	cam.grab();
-	for (int i = 0; i < 7; i++)
+	for (int i = 0; i < NUMVCHANNELS; i++)
 	{
-		if (vidFrame.size() < i+1) {
-			vidFrame.push_back(cv::Mat());
-			old_norm.push_back(0.0);
-			cur_norm.push_back(0.0);
-			delta.push_back(0.0);
-		}
-		cam.retrieve(framebuf, i);
-		cur_norm[i] = cv::norm(framebuf);
-		if (SHOW_IMAGES) {
-			framebuf.copyTo(vidFrame[i]);
-			imshow(channel_map[i], vidFrame[i]);
-		}
+		cam.retrieve(vidFrame[i], i);
+		cur_norm[i] = cv::norm(vidFrame[i]);
 	}
-	if (SHOW_IMAGES)
-		cv::waitKey(10);
 
 	// Calculate change in matrix magnitude for each video channel
 	for (uint i = 0; i < vidFrame.size(); i++) {
@@ -210,7 +197,6 @@ int main(int argc, char **argv)
 				REPOSITION_CURSOR_LAST_LINE;
 			}
 		}
-		usleep(40000);
 	}
 	return 0;
 }
