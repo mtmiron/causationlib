@@ -155,7 +155,7 @@ int Axon::fire(short input_v, struct timespec at_time)
 	 * by exciting them with a full strength input (TODO: model neurotransmitter synapses.)
 	 */
 	for (uint i = 0; i < n_nconnections; i++)
-		n_output[i]->input(input_v);
+		n_output[i]->input(input_v, at_time);
 
 	return dist_voltage;
 }
@@ -204,18 +204,20 @@ int Neuron::input(short input_v, struct timespec at_time)
 {
 	long long time_delta = timespec_to_ms(timespec_minus(at_time, firetime));
 
-	if (time_delta > excited_time)
-		voltage = resting_v;
 	if (time_delta <= refractory_time) {
 		for (uint i = 0; i < dendrites.size(); i++)
 			dendrites[i].grow(input_v);
 		return -1;
 	}
 
-	voltage += input_v;
+	if (timespec_to_ms(timespec_minus(at_time, inputtime)) < excited_time)
+		voltage += input_v;
+	inputtime = at_time;
+
 	if (voltage >= action_v) {
 		firetime = at_time;
-		return axon.fire(fire_v);
+		voltage = resting_v;
+		return axon.fire(fire_v, at_time);
 	}
 
 	return 0;

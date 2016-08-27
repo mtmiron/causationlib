@@ -85,6 +85,7 @@ class Neuron
 	int x = 0;
 	int y = 0;
 	struct timespec firetime = { 0 };
+	struct timespec inputtime = { 0 };
 	NeuralNet *net = NULL;
 
   protected:
