@@ -23,6 +23,7 @@ struct options {
 	int loop_time;
 	int input_strength;
 	uint layers;
+	bool random_input;
 	bool no_density_image;
 	bool no_activity_image;
 };
@@ -34,6 +35,7 @@ void print_help(char *argv)
 		"\t\t-h\tThis help\n"
 		"\t\t-d\tDon't draw neural connection density image\n"
 		"\t\t-a\tDon't draw neural activity image\n"
+		"\t\t-r\tUse random values for input to neurons\n"
 		"\t\t-x ARG\tWidth of neural net\n"
 		"\t\t-y ARG\tHeight of neural net\n"
 		"\t\t-s ARG\tStep size for neuron input loop\n"
@@ -47,10 +49,10 @@ void print_help(char *argv)
 struct options parse_args(int argc, char **argv)
 {
 	struct options opts = { DEFAULT_STEP_SIZE, DEFAULT_NET_HEIGHT, DEFAULT_NET_WIDTH,
-								DEFAULT_LOOP_TIME, DEFAULT_INPUT_STRENGTH, DEFAULT_LAYERS };
+				DEFAULT_LOOP_TIME, DEFAULT_INPUT_STRENGTH, DEFAULT_LAYERS, false };
 	int c = 0;
 
-	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:")) != -1)
+	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:r")) != -1)
 	{
 		switch (c) {
 		case 's':
@@ -76,6 +78,10 @@ struct options parse_args(int argc, char **argv)
 			break;
 		case 'l':
 			opts.layers = atoi(optarg);
+			break;
+		case 'r':
+			opts.random_input = true;
+			opts.input_strength = -1;
 			break;
 		case 'h':
 		case '?':
@@ -110,9 +116,16 @@ int main(int argc, char **argv)
 	}
 	net = nets[0];
 
+	if (opts.random_input) {
+		clock_gettime(CLOCK_REALTIME, &at_time);
+		srand(at_time.tv_sec);
+	}
 	for (uchar key = 0; key != 27; key = waitKey(opts.loop_time))
 	{
 		clock_gettime(CLOCK_REALTIME, &at_time);
+		if (opts.random_input) {
+			opts.input_strength = rand() % 100;
+		}
 
 		for (uint i = 10; i < net->neurons.size() - 10; i += opts.stepsize)
 			for (uint j = 10; j < net->neurons[i].size() - 10; j += opts.stepsize)
@@ -122,7 +135,7 @@ int main(int argc, char **argv)
 		{
 			 sprintf(windowname, "%d: firing neurons", n);
 			 if (!opts.no_activity_image) {
-				  activity_image = nets[n]->createCurrentActivityImage(480, 360);//, at_time);
+				  activity_image = nets[n]->createCurrentActivityImage(480, 360, at_time);
 				  imshow(windowname, activity_image);
 			 }
 
