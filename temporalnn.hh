@@ -1,8 +1,12 @@
+#ifndef _TEMPORALNN_HH_INCLUDED
+#define _TEMPORALNN_HH_INCLUDED 1
+
 #include <math.h>
 #include <time.h>
 #include <vector>
 #include <unordered_set>
 #include <opencv2/core.hpp>
+#include "tortoise.hh"
 
 /*
  * A big, big caveat with the simplicity of this implementation: events do not
@@ -30,7 +34,7 @@ struct timespec timespec_plus(struct timespec &time1, struct timespec &time2);
 class BrainCell
 {
   protected:
-	struct timespec firetime = { 0 };
+	struct TortoiseTime firetime;
 	unsigned short propagation_time = 5;
 
   public:
@@ -40,7 +44,7 @@ class BrainCell
 	explicit BrainCell(Neuron *n);
 	Neuron *setNeuron(Neuron *owner);
 	NeuralNet *setNet(NeuralNet *owner);
-	virtual int input(short input_v, struct timespec &at_time) = 0;
+	virtual int input(short input_v, struct TortoiseTime &at_time) = 0;
 };
 
 
@@ -53,7 +57,7 @@ class Dendrite : public BrainCell
 	float seekfactor = 0.1;
 	short clusterfactor = 1;
 	float bulge = 0;
-	int input(short input_v, struct timespec &at_time);
+	int input(short input_v, struct TortoiseTime &at_time);
 	int grow();
 
   public:
@@ -75,7 +79,7 @@ class Axon : public BrainCell
 	void addDendriteOutput(Dendrite *d);
 	void addNeuronOutput(Neuron *n);
 	int numberOfConnections();
-	int input(short input_v, struct timespec &at_time);
+	int input(short input_v, struct TortoiseTime &at_time);
 };
 
 
@@ -103,11 +107,10 @@ class Neuron : public BrainCell
 
   public:
 	explicit Neuron();
-	explicit Neuron(int xarg, int yarg);
 	Neuron *setupDendrites();
 	Neuron *setupAxon();
 	int numberOfConnections();
-	int input(short input_v, struct timespec &at_time);
+	int input(short input_v, struct TortoiseTime &at_time);
 	int fire();
 };
 
@@ -120,7 +123,9 @@ class NeuralNet
 	void connectTo(NeuralNet *net);
 	int handleDendriticBulge(Neuron *n, float bulge);
 	cv::Mat createConnectionDensityImage(int height, int width);
-	cv::Mat createCurrentActivityImage(int height, int width, struct timespec &at_time);
+	cv::Mat createCurrentActivityImage(int height, int width, struct TortoiseTime &at_time);
 };
 
 } // namespace
+
+#endif
