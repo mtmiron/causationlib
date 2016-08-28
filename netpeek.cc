@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 	vector<NeuralNet *> nets;
 	NeuralNet *net;
 	Mat densities_image, activity_image;
-	struct timespec at_time = { 0 };
+	struct TortoiseTime at_time;
 	struct options opts = parse_args(argc, argv);
 	char windowname[256] = { 0 };
 
