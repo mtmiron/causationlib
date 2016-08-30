@@ -8,36 +8,21 @@
 #include <opencv2/core.hpp>
 #include "tortoise.hh"
 
-/*
- * A big, big caveat with the simplicity of this implementation: events do not
- * actually take place at the specified time provided by an argument -- there is no
- * dispatch queue, signal timers, or anything of the sort.  The time value is only
- * used to calculate summed voltage differences.
- */
-namespace TemporalNet {
+
 using namespace std;
 
 class Neuron;
 class NeuralNet;
 
 
-long long unsigned nano_to_milli(long long unsigned nano);
-long long unsigned milli_to_nano(long long unsigned milli);
-long long unsigned timespec_to_ms(struct timespec time);
-struct timespec ms_to_timespec(long long unsigned ltime);
-long long timespec_minus(struct timespec &time, long long ms);
-struct timespec timespec_minus(struct timespec &time1, struct timespec &time2);
-long long timespec_plus(struct timespec &time, long long ms);
-struct timespec timespec_plus(struct timespec &time1, struct timespec &time2);
-
-
 class BrainCell
 {
   protected:
-	struct TortoiseTime firetime;
+	TortoiseTime firetime;
 	unsigned short propagation_time = 5;
 
   public:
+	static TimeQueue event_queue;
 	Neuron *neuron;
 	NeuralNet *net;
 
@@ -45,8 +30,12 @@ class BrainCell
 	Neuron *setNeuron(Neuron *owner);
 	NeuralNet *setNet(NeuralNet *owner);
 	virtual int input(short input_v, struct TortoiseTime &at_time) = 0;
+	virtual int bound_input(short input_v, struct TortoiseTime &at_time) = 0;
 };
 
+// without this, the compiler leaves the symbol undefined in the object file
+// -- don't ask me, but (compiler == happy) == (programmer == happy)
+TimeQueue BrainCell::event_queue;
 
 class Dendrite : public BrainCell
 {
@@ -58,6 +47,7 @@ class Dendrite : public BrainCell
 	short clusterfactor = 1;
 	float bulge = 0;
 	int input(short input_v, struct TortoiseTime &at_time);
+	int bound_input(short input_v, struct TortoiseTime &at_time);
 	int grow();
 
   public:
@@ -80,6 +70,7 @@ class Axon : public BrainCell
 	void addNeuronOutput(Neuron *n);
 	int numberOfConnections();
 	int input(short input_v, struct TortoiseTime &at_time);
+	int bound_input(short input_v, struct TortoiseTime &at_time);
 };
 
 
@@ -111,6 +102,7 @@ class Neuron : public BrainCell
 	Neuron *setupAxon();
 	int numberOfConnections();
 	int input(short input_v, struct TortoiseTime &at_time);
+	int bound_input(short input_v, struct TortoiseTime &at_time);
 	int fire();
 };
 
@@ -126,6 +118,5 @@ class NeuralNet
 	cv::Mat createCurrentActivityImage(int height, int width, struct TortoiseTime &at_time);
 };
 
-} // namespace
 
 #endif

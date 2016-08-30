@@ -1,8 +1,6 @@
 #include "temporalnn.hh"
-#include <algorithm>
 #include <iostream>
 
-namespace TemporalNet {
 using namespace std;
 
 
@@ -35,9 +33,15 @@ Dendrite::Dendrite(Neuron *n) : BrainCell(n)
 	this->neuron = n;
 }
 
-int Dendrite::input(short input_v, struct TortoiseTime &at_time)
+int Dendrite::bound_input(short input_v, struct TortoiseTime &at_time)
 {
 	return neuron->input(input_v, at_time);
+}
+
+int Dendrite::input(short input_v, struct TortoiseTime &at_time)
+{
+	event_queue.insert(at_time, bind(&Dendrite::bound_input, this, input_v, at_time));
+	return 0;
 }
 
 int Dendrite::grow()
@@ -69,7 +73,7 @@ void Axon::addNeuronOutput(Neuron *n)
 	n_output.insert(n);
 }
 
-int Axon::input(short input_v, struct TortoiseTime &at_time)
+int Axon::bound_input(short input_v, struct TortoiseTime &at_time)
 {
 	ulong n_dconnections = d_output.size();
 	short dist_voltage = input_v / (n_dconnections ? n_dconnections : 1);
@@ -85,7 +89,11 @@ int Axon::input(short input_v, struct TortoiseTime &at_time)
 	return dist_voltage;
 }
 
-
+int Axon::input(short input_v, struct TortoiseTime &at_time)
+{
+	event_queue.insert(at_time, bind(&Axon::bound_input, this, input_v, at_time));
+	return 0;
+}
 
 /*
  * class Neuron
@@ -112,7 +120,7 @@ int Neuron::numberOfConnections()
 	return axon.numberOfConnections();
 }
 
-int Neuron::input(short input_v, struct TortoiseTime &at_time)
+int Neuron::bound_input(short input_v, struct TortoiseTime &at_time)
 {
 	TortoiseTime time_delta(at_time - firetime);
 
@@ -121,7 +129,7 @@ int Neuron::input(short input_v, struct TortoiseTime &at_time)
 	if (time_delta <= refractory_time) {
 		for (uint i = 0; i < dendrites.size(); i++)
 			dendrites[i].grow();
-		return -1;
+		return 1;
 	}
 
 	voltage += input_v;
@@ -131,6 +139,12 @@ int Neuron::input(short input_v, struct TortoiseTime &at_time)
 		return axon.input(fire_v, at_time);
 	}
 
+	return 0;
+}
+
+int Neuron::input(short input_v, struct TortoiseTime &at_time)
+{
+	event_queue.insert(at_time, bind(&Neuron::bound_input, this, input_v, at_time));
 	return 0;
 }
 
@@ -191,5 +205,3 @@ void NeuralNet::connectTo(NeuralNet *net)
 				this->neurons[i][j].addNeuronOutput(&net->neurons[i][j]);
 	return;
 }
-
-} // namespace
