@@ -107,10 +107,7 @@ bool TortoiseTime::operator==(const TortoiseTime t2)
 
 TortoiseTime TortoiseTime::operator+(const TortoiseTime t2)
 {
-	struct timespec ret = { this->tv_sec + t2.tv_sec, 0 };
-
-	ret.tv_sec += (this->tv_nsec + t2.tv_nsec) / pow(10,9);
-	ret.tv_nsec = (this->tv_nsec + t2.tv_nsec) % (time_t)pow(10,9);
+	struct timespec ret = { this->tv_sec + t2.tv_sec, this->tv_nsec + t2.tv_nsec };
 
 	return ret;
 }
