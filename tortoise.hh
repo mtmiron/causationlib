@@ -9,13 +9,11 @@
 #include <thread>
 #include <math.h>
 
-namespace TemporalNet {
 using namespace std;
 
-static mutex q_mutex;
+static mutex q_insert_mutex;
+static mutex q_apply_mutex;
 
-typedef function<int(short,struct TortoiseTime)> timed_call_t;
-typedef pair<struct TortoiseTime, timed_call_t> q_pair_t;
 
 struct TortoiseTime : timespec
 {
@@ -26,29 +24,30 @@ struct TortoiseTime : timespec
 
 	TortoiseTime operator-(long long ms);
 	TortoiseTime operator+(long long ms);
-	TortoiseTime operator+(const TortoiseTime &t2);
-	TortoiseTime operator-(const TortoiseTime &t2);
+	TortoiseTime operator+(TortoiseTime t2);
+	TortoiseTime operator-(TortoiseTime t2);
 
 	bool operator<= (unsigned short ms);
-	bool operator() (const struct TortoiseTime &t1, const struct TortoiseTime &t2);
-	bool operator> (const TortoiseTime &t2);
 	bool operator> (unsigned short ms);
-//	bool operator< (const struct TortoiseTime &t1, const struct TortoiseTime &t2);
-	bool operator< (const TortoiseTime &t2);
-	bool operator<= (const TortoiseTime &t2);
-	bool operator>= (const TortoiseTime &t2);
-	bool operator== (const TortoiseTime &t2);
+	bool operator> (const TortoiseTime t2);
+	bool operator< (const TortoiseTime t2) const;
+	bool operator<= (const TortoiseTime t2);
+	bool operator>= (const TortoiseTime t2);
+	bool operator== (const TortoiseTime t2);
 };
+
+typedef function<int()> timed_call_t;
+typedef pair<TortoiseTime, timed_call_t> q_pair_t;
 
 class TimeQueue
 {
   private:
-	multimap< struct TortoiseTime, timed_call_t, TortoiseTime > queue;
+	multimap< TortoiseTime, timed_call_t > queue;
 
   public:
-	void insert(struct TortoiseTime, timed_call_t);
+	void insert(TortoiseTime, timed_call_t);
 	int applyNext();
+	int size();
 };
 
-}
 #endif
