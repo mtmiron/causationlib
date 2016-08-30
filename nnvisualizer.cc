@@ -2,7 +2,6 @@
 #include <opencv2/core.hpp>
 #include <iostream>
 
-using namespace TemporalNet;
 using namespace cv;
 using namespace std;
 
