@@ -1,4 +1,5 @@
 #include "tortoise.hh"
+#include <iostream>
 
 /*
  * Slow and steady... :)
@@ -106,40 +107,44 @@ bool TortoiseTime::operator==(const TortoiseTime t2)
 
 TortoiseTime TortoiseTime::operator+(const TortoiseTime t2)
 {
-	struct timespec ret;
+	struct timespec ret = { this->tv_sec + t2.tv_sec, 0 };
 
-	ret.tv_sec = this->tv_sec + t2.tv_sec;
-	ret.tv_nsec = this->tv_nsec + t2.tv_nsec;
+	ret.tv_sec += (this->tv_nsec + t2.tv_nsec) / pow(10,9);
+	ret.tv_nsec = (this->tv_nsec + t2.tv_nsec) % (time_t)pow(10,9);
 
 	return ret;
 }
 
 TortoiseTime TortoiseTime::operator-(const TortoiseTime t2)
 {
-	struct timespec ret;
+	struct timespec ret = { this->tv_sec - t2.tv_sec, this->tv_nsec - t2.tv_nsec };
 
-	ret.tv_sec = this->tv_sec - t2.tv_sec;
-	ret.tv_nsec = this->tv_nsec - t2.tv_nsec;
 	return ret;
 }
 
 TortoiseTime TortoiseTime::operator+(long long ms)
 {
-	struct timespec ret;
+	struct timespec ret = { this->tv_sec, 0 };
+	long ns = this->tv_nsec + ms * pow(10,6);
 
-	ms *= pow(10,6);
-	ret.tv_sec = this->tv_sec + (ms / pow(10,9));
-	ret.tv_nsec = this->tv_nsec + ms;
+	ret.tv_sec += ns / pow(10,9);
+	ret.tv_nsec = ns % (long)pow(10,9);
 
 	return ret;
 }
 
 TortoiseTime TortoiseTime::operator-(long long ms)
 {
-	struct timespec ret;
+	struct timespec ret = { this->tv_sec, 0 };
+	long ns = this->tv_nsec - ms * pow(10,6);
 
-	ret.tv_sec = this->tv_sec;
-	ret.tv_nsec = this->tv_nsec - ms * pow(10,6);
+	ret.tv_sec -= abs(ns / pow(10,9));
+	ret.tv_nsec = pow(10,9) - abs(ns % (long)pow(10,6));
 
 	return ret;
+}
+
+ostream &operator<<(ostream &os, const TortoiseTime &t)
+{
+	return os << t.tv_sec << "." << t.tv_nsec;
 }
