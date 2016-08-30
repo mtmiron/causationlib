@@ -1,5 +1,4 @@
 #include "temporalnn.hh"
-#include <iostream>
 
 using namespace std;
 
@@ -33,16 +32,22 @@ Dendrite::Dendrite(Neuron *n) : BrainCell(n)
 	this->neuron = n;
 }
 
+#ifdef WITH_TORTOISELIB
 int Dendrite::bound_input(short input_v, struct TortoiseTime &at_time)
+#else
+int Dendrite::input(short input_v, struct TortoiseTime &at_time)
+#endif
 {
 	return neuron->input(input_v, at_time);
 }
 
+#ifdef WITH_TORTOISELIB
 int Dendrite::input(short input_v, struct TortoiseTime &at_time)
 {
 	event_queue.insert(at_time, bind(&Dendrite::bound_input, this, input_v, at_time));
 	return 0;
 }
+#endif
 
 int Dendrite::grow()
 {
@@ -73,7 +78,11 @@ void Axon::addNeuronOutput(Neuron *n)
 	n_output.insert(n);
 }
 
+#ifdef WITH_TORTOISELIB
 int Axon::bound_input(short input_v, struct TortoiseTime &at_time)
+#else
+int Axon::input(short input_v, struct TortoiseTime &at_time)
+#endif
 {
 	ulong n_dconnections = d_output.size();
 	short dist_voltage = input_v / (n_dconnections ? n_dconnections : 1);
@@ -89,11 +98,13 @@ int Axon::bound_input(short input_v, struct TortoiseTime &at_time)
 	return dist_voltage;
 }
 
+#ifdef WITH_TORTOISELIB
 int Axon::input(short input_v, struct TortoiseTime &at_time)
 {
 	event_queue.insert(at_time, bind(&Axon::bound_input, this, input_v, at_time));
 	return 0;
 }
+#endif
 
 /*
  * class Neuron
@@ -120,7 +131,11 @@ int Neuron::numberOfConnections()
 	return axon.numberOfConnections();
 }
 
+#ifdef WITH_TORTOISELIB
 int Neuron::bound_input(short input_v, struct TortoiseTime &at_time)
+#else
+int Neuron::input(short input_v, struct TortoiseTime &at_time)
+#endif
 {
 	TortoiseTime time_delta(at_time - firetime);
 
@@ -142,11 +157,13 @@ int Neuron::bound_input(short input_v, struct TortoiseTime &at_time)
 	return 0;
 }
 
+#ifdef WITH_TORTOISELIB
 int Neuron::input(short input_v, struct TortoiseTime &at_time)
 {
 	event_queue.insert(at_time, bind(&Neuron::bound_input, this, input_v, at_time));
 	return 0;
 }
+#endif
 
 int Neuron::fire()
 {

@@ -34,6 +34,7 @@ struct TortoiseTime : timespec
 	bool operator<= (const TortoiseTime t2);
 	bool operator>= (const TortoiseTime t2);
 	bool operator== (const TortoiseTime t2);
+	friend ostream& operator<<(ostream& os, const TortoiseTime &t);
 };
 
 typedef function<int()> timed_call_t;

@@ -113,10 +113,10 @@ int main(int argc, char **argv)
 		for (uint i = 10; i < net->neurons.size() - 10; i += opts.stepsize)
 			for (uint j = 10; j < net->neurons[i].size() - 10; j += opts.stepsize)
 				net->neurons[i][j].input(opts.input_strength, at_time);
-
+#ifdef WITH_TORTOISELIB
 		while (BrainCell::event_queue.applyNext() != -1)
 			;
-
+#endif
 		for (uint n = 0; n < opts.layers; n++)
 		{
 			 sprintf(windowname, "layer #%d: firing neurons", n);
