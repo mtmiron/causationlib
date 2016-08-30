@@ -1,6 +1,5 @@
 #include "temporalnn.hh"
 #include <opencv2/core.hpp>
-#include <iostream>
 
 using namespace cv;
 using namespace std;
