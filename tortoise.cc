@@ -63,66 +63,45 @@ TortoiseTime::TortoiseTime (int init)
 
 bool TortoiseTime::operator< (const TortoiseTime t2) const
 {
-	if (this->tv_sec < t2.tv_sec)
-		return true;
-	else if (this->tv_sec == t2.tv_sec && this->tv_nsec < t2.tv_nsec)
-		return true;
-	else
-		return false;
+	return ( (this->tv_sec < t2.tv_sec)
+			|| ( (this->tv_sec == t2.tv_sec)
+				&& (this->tv_nsec < t2.tv_nsec)) );
 }
 
 bool TortoiseTime::operator>(const TortoiseTime t2)
 {
-	if (this->tv_sec > t2.tv_sec)
-		return true;
-	else if (this->tv_sec == t2.tv_sec && this->tv_nsec > t2.tv_nsec)
-		return true;
-	else
-		return false;
+	return ( (this->tv_sec > t2.tv_sec)
+			|| ( (this->tv_sec == t2.tv_sec)
+				&& (this->tv_nsec > t2.tv_nsec)) );
 }
 
 bool TortoiseTime::operator>(unsigned short ms)
 {
-	if (this->tv_nsec > ms * pow(10,6))
-		return true;
-	else
-		return false;
+	return (this->tv_nsec > ms * pow(10,6));
 }
 
 bool TortoiseTime::operator<=(const TortoiseTime t2)
 {
-	if (this->tv_sec < t2.tv_sec)
-		return true;
-	else if (this->tv_sec == t2.tv_sec && this->tv_nsec <= t2.tv_nsec)
-		return true;
-	else
-		return false;
+	return ( (this->tv_sec < t2.tv_sec)
+			|| ( (this->tv_sec == t2.tv_sec)
+				&& (this->tv_nsec <= t2.tv_nsec)) );
 }
 
 bool TortoiseTime::operator<=(unsigned short ms)
 {
-	if (this->tv_nsec <= (ms * pow(10,6)))
-		return true;
-	else
-		return false;
+	return (this->tv_nsec <= (ms * pow(10,6)));
 }
 
 bool TortoiseTime::operator>=(const TortoiseTime t2)
 {
-	if (this->tv_sec > t2.tv_sec)
-		return true;
-	else if (this->tv_sec == t2.tv_sec && this->tv_nsec >= t2.tv_nsec)
-		return true;
-	else
-		return false;
+	return ( (this->tv_sec > t2.tv_sec)
+			|| ( (this->tv_sec == t2.tv_sec)
+				&& (this->tv_nsec >= t2.tv_nsec)) );
 }
 
 bool TortoiseTime::operator==(const TortoiseTime t2)
 {
-	if (this->tv_sec == t2.tv_sec && this->tv_nsec == t2.tv_nsec)
-		return true;
-	else
-		return false;
+	return (this->tv_sec == t2.tv_sec && this->tv_nsec == t2.tv_nsec);
 }
 
 TortoiseTime TortoiseTime::operator+(const TortoiseTime t2)
