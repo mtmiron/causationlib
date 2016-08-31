@@ -153,13 +153,13 @@ int Neuron::input(short input_v, struct TortoiseTime &at_time)
 
 	if (at_time - input_time > excited_time)
 		voltage = resting_v;
+	else
+		input_time = at_time;
 
 	if ( (voltage += input_v) >= action_v ) {
 		firetime = at_time;
 		input_time = 0;
 		return axon.input(fire_v, at_time);
-	} else {
-		input_time = at_time;
 	}
 
 	return 0;
