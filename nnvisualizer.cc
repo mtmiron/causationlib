@@ -42,15 +42,13 @@ Mat NeuralNet::createCurrentActivityImage(int height, int width, struct Tortoise
 
 	x_pos = ((float)width / x);
 	y_pos = ((float)height / y);
-	if (at_time.tv_sec == 0 && at_time.tv_nsec == 0)
-		clock_gettime(CLOCK_REALTIME, &at_time);
 
 	for (int i = 0; i < x; i++)
 		for (int j = 0; j < y; j++)
 		{
-			if (this->neurons[i][j].firetime.tv_sec == 0)
+			if (this->neurons[i][j].firetime == 0 || this->neurons[i][j].firetime > at_time)
 				continue;
-			diff = (uint)((at_time - this->neurons[i][j].firetime).tv_nsec / pow(10,6));
+			diff = (at_time - this->neurons[i][j].firetime).tv_nsec / pow(10,6);
 			color = basecolor / MAX(1, diff / this->neurons[i][j].excited_time);
 			image.at<Vec3b>( MIN(round(i * x_pos), width - 1), MIN(round(j * y_pos), height - 1) ) = color;
 		}
