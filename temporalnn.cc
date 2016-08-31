@@ -1,5 +1,7 @@
 #include "temporalnn.hh"
 
+#define BIND(T) bind(&T::bound_input, this, input_v, at_time)
+
 using namespace std;
 
 
@@ -44,7 +46,7 @@ int Dendrite::input(short input_v, struct TortoiseTime &at_time)
 #ifdef WITH_TORTOISELIB
 int Dendrite::input(short input_v, struct TortoiseTime &at_time)
 {
-	event_queue.insert(at_time, bind(&Dendrite::bound_input, this, input_v, at_time));
+	event_queue.insert(at_time, BIND(Dendrite));
 	return 0;
 }
 #endif
@@ -84,6 +86,7 @@ int Axon::bound_input(short input_v, struct TortoiseTime &at_time)
 int Axon::input(short input_v, struct TortoiseTime &at_time)
 #endif
 {
+	at_time = at_time + propagation_time;
 	ulong n_dconnections = d_output.size();
 	short dist_voltage = input_v / (n_dconnections ? n_dconnections : 1);
 
@@ -101,7 +104,7 @@ int Axon::input(short input_v, struct TortoiseTime &at_time)
 #ifdef WITH_TORTOISELIB
 int Axon::input(short input_v, struct TortoiseTime &at_time)
 {
-	event_queue.insert(at_time, bind(&Axon::bound_input, this, input_v, at_time));
+	event_queue.insert(at_time, BIND(Axon));
 	return 0;
 }
 #endif
@@ -139,19 +142,21 @@ int Neuron::input(short input_v, struct TortoiseTime &at_time)
 {
 	TortoiseTime time_delta(at_time - firetime);
 
-	if (time_delta > excited_time)
-		voltage = resting_v;
 	if (time_delta <= refractory_time) {
 		for (uint i = 0; i < dendrites.size(); i++)
 			dendrites[i].grow();
 		return 1;
 	}
 
-	voltage += input_v;
-	if (voltage >= action_v) {
+	if (at_time - input_time > excited_time)
+		voltage = resting_v;
+
+	if ( (voltage += input_v) >= action_v ) {
 		firetime = at_time;
-		at_time = ((TortoiseTime)at_time + propagation_time);
+		input_time = 0;
 		return axon.input(fire_v, at_time);
+	} else {
+		input_time = at_time;
 	}
 
 	return 0;
@@ -160,7 +165,7 @@ int Neuron::input(short input_v, struct TortoiseTime &at_time)
 #ifdef WITH_TORTOISELIB
 int Neuron::input(short input_v, struct TortoiseTime &at_time)
 {
-	event_queue.insert(at_time, bind(&Neuron::bound_input, this, input_v, at_time));
+	event_queue.insert(at_time, BIND(Neuron));
 	return 0;
 }
 #endif
@@ -218,7 +223,7 @@ void NeuralNet::connectTo(NeuralNet *net)
 {
 	for (uint i = 0; i < this->neurons.size(); i++)
 		for (uint j = 0; j < this->neurons[i].size(); j++)
-			if (net->neurons.size() < i && net->neurons[i].size() < j)
+			if (i < net->neurons.size() && j < net->neurons[i].size())
 				this->neurons[i][j].addNeuronOutput(&net->neurons[i][j]);
 	return;
 }

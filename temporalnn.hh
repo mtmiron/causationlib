@@ -19,7 +19,8 @@ class BrainCell
 {
   protected:
 	TortoiseTime firetime;
-	unsigned short propagation_time = 5;
+	TortoiseTime input_time;
+	unsigned short propagation_time = 1;
 
   public:
 	static TimeQueue event_queue;
