@@ -146,7 +146,7 @@ TortoiseTime TortoiseTime::operator-(const TortoiseTime t2)
 TortoiseTime TortoiseTime::operator+(long long ms)
 {
 	struct timespec ret = { this->tv_sec, 0 };
-	long ns = this->tv_nsec + ms * pow(10,6);
+	long long ns = this->tv_nsec + ms * pow(10,6);
 
 	ret.tv_sec += ns / pow(10,9);
 	ret.tv_nsec = ns % (long)pow(10,9);
@@ -157,10 +157,13 @@ TortoiseTime TortoiseTime::operator+(long long ms)
 TortoiseTime TortoiseTime::operator-(long long ms)
 {
 	struct timespec ret = { this->tv_sec, 0 };
-	long ns = this->tv_nsec - ms * pow(10,6);
+	long long ns = this->tv_nsec - ms * pow(10,6);
 
-	ret.tv_sec -= abs(ns / pow(10,9));
-	ret.tv_nsec = pow(10,9) - abs(ns % (long)pow(10,6));
+	ret.tv_sec += ns / pow(10,9);
+	if (ret.tv_sec == this->tv_sec)
+		ret.tv_nsec = ns % (long)pow(10,9);
+	else
+		ret.tv_nsec = pow(10,9) - abs(ns);
 
 	return ret;
 }
