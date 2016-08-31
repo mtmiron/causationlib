@@ -22,6 +22,8 @@ struct TortoiseTime : timespec
 	TortoiseTime(const struct timespec &t);
 	TortoiseTime(const struct TortoiseTime &t);
 
+	TortoiseTime& operator=(TortoiseTime time);
+
 	TortoiseTime operator-(long long ms);
 	TortoiseTime operator+(long long ms);
 	TortoiseTime operator+(TortoiseTime t2);
@@ -34,6 +36,7 @@ struct TortoiseTime : timespec
 	bool operator<= (const TortoiseTime t2);
 	bool operator>= (const TortoiseTime t2);
 	bool operator== (const TortoiseTime t2);
+	bool operator== (const int i);
 	friend ostream& operator<<(ostream& os, const TortoiseTime &t);
 };
 
@@ -47,6 +50,7 @@ class TimeQueue
 
   public:
 	void insert(TortoiseTime, timed_call_t);
+	int nextIsEarlierThen(TortoiseTime &time);
 	int applyNext();
 	int size();
 };
