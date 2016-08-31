@@ -23,6 +23,7 @@ class BrainCell
 	unsigned short propagation_time = 1;
 
   public:
+	static bool freeze_connections;
 	static TimeQueue event_queue;
 	Neuron *neuron;
 	NeuralNet *net;
@@ -31,7 +32,7 @@ class BrainCell
 	Neuron *setNeuron(Neuron *owner);
 	NeuralNet *setNet(NeuralNet *owner);
 	virtual int input(short input_v, struct TortoiseTime &at_time) = 0;
-#ifdef WITH_TORTOISELIB
+#ifdef WITH_TIMEQUEUE
 	virtual int bound_input(short input_v, struct TortoiseTime &at_time) = 0;
 #endif
 };
@@ -39,6 +40,7 @@ class BrainCell
 // without this, the compiler leaves the symbol undefined in the object file
 // -- don't ask me, but (compiler == happy) == (programmer == happy)
 TimeQueue BrainCell::event_queue;
+bool BrainCell::freeze_connections;
 
 class Dendrite : public BrainCell
 {
@@ -50,7 +52,7 @@ class Dendrite : public BrainCell
 	short clusterfactor = 1;
 	float bulge = 0;
 	int input(short input_v, struct TortoiseTime &at_time);
-#ifdef WITH_TORTOISELIB
+#ifdef WITH_TIMEQUEUE
 	int bound_input(short input_v, struct TortoiseTime &at_time);
 #endif
 	int grow();
@@ -75,7 +77,7 @@ class Axon : public BrainCell
 	void addNeuronOutput(Neuron *n);
 	int numberOfConnections();
 	int input(short input_v, struct TortoiseTime &at_time);
-#ifdef WITH_TORTOISELIB
+#ifdef WITH_TIMEQUEUE
 	int bound_input(short input_v, struct TortoiseTime &at_time);
 #endif
 };
@@ -87,7 +89,7 @@ class Neuron : public BrainCell
   private:
   	// In milliseconds
 	unsigned short refractory_time = 50;
-	unsigned short excited_time = 20;
+	unsigned short excited_time = 5;
 	short refractory_v = -50;
 	short voltage = -80;
 	short resting_v = -80;
@@ -109,7 +111,7 @@ class Neuron : public BrainCell
 	Neuron *setupAxon();
 	int numberOfConnections();
 	int input(short input_v, struct TortoiseTime &at_time);
-#ifdef WITH_TORTOISELIB
+#ifdef WITH_TIMEQUEUE
 	int bound_input(short input_v, struct TortoiseTime &at_time);
 #endif
 	int fire();

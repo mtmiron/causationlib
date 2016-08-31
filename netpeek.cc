@@ -23,6 +23,7 @@ struct options {
 	int input_strength;
 	uint layers;
 	bool random_step;
+	bool freeze_connections;
 	bool no_density_image;
 	bool no_activity_image;
 };
@@ -36,6 +37,7 @@ void print_help(char *argv)
 		"\t\t-d\tDon't draw neural connection density image\n"
 		"\t\t-a\tDon't draw neural activity image\n"
 		"\t\t-r\tRandom step size for neuron\n"
+		"\t\t-f\tDon't self assemble neurons (freeze state)\n"
 		"\t\t-s ARG\tStep size for neuron input loop\n"
 		"\t\t-x ARG\tWidth of neural net\n"
 		"\t\t-y ARG\tHeight of neural net\n"
@@ -52,7 +54,7 @@ struct options parse_args(int argc, char **argv)
 								DEFAULT_LOOP_TIME, DEFAULT_INPUT_STRENGTH, DEFAULT_LAYERS, false };
 	int c = 0;
 
-	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:r")) != -1)
+	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:rf")) != -1)
 	{
 		switch (c) {
 		case 's':
@@ -81,6 +83,10 @@ struct options parse_args(int argc, char **argv)
 			break;
 		case 'r':
 			opts.random_step = true;
+			break;
+		case 'f':
+			opts.freeze_connections = true;
+			BrainCell::freeze_connections = true;
 			break;
 		case 'h':
 		case '?':
@@ -137,9 +143,9 @@ int main(int argc, char **argv)
 		else
 			interval_step(nets, at_time);
 
-#ifdef WITH_TORTOISELIB
-		while (BrainCell::event_queue.nextIsEarlierThen(at_time) == true)
-			BrainCell::event_queue.applyNext();
+#ifdef WITH_TIMEQUEUE
+		while (BrainCell::event_queue.applyNext() != -1)
+			;
 #endif
 
 		for (uint n = 0; n < opts.layers; n++)

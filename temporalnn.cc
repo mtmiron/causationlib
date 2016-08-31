@@ -34,7 +34,7 @@ Dendrite::Dendrite(Neuron *n) : BrainCell(n)
 	this->neuron = n;
 }
 
-#ifdef WITH_TORTOISELIB
+#ifdef WITH_TIMEQUEUE
 int Dendrite::bound_input(short input_v, struct TortoiseTime &at_time)
 #else
 int Dendrite::input(short input_v, struct TortoiseTime &at_time)
@@ -43,7 +43,7 @@ int Dendrite::input(short input_v, struct TortoiseTime &at_time)
 	return neuron->input(input_v, at_time);
 }
 
-#ifdef WITH_TORTOISELIB
+#ifdef WITH_TIMEQUEUE
 int Dendrite::input(short input_v, struct TortoiseTime &at_time)
 {
 	event_queue.insert(at_time, BIND(Dendrite));
@@ -53,6 +53,9 @@ int Dendrite::input(short input_v, struct TortoiseTime &at_time)
 
 int Dendrite::grow()
 {
+	if (freeze_connections)
+		return -1;
+
 	bulge += 1 * seekfactor;
 	return this->neuron->net->handleDendriticBulge(this->neuron, bulge);
 }
@@ -80,7 +83,7 @@ void Axon::addNeuronOutput(Neuron *n)
 	n_output.insert(n);
 }
 
-#ifdef WITH_TORTOISELIB
+#ifdef WITH_TIMEQUEUE
 int Axon::bound_input(short input_v, struct TortoiseTime &at_time)
 #else
 int Axon::input(short input_v, struct TortoiseTime &at_time)
@@ -101,7 +104,7 @@ int Axon::input(short input_v, struct TortoiseTime &at_time)
 	return dist_voltage;
 }
 
-#ifdef WITH_TORTOISELIB
+#ifdef WITH_TIMEQUEUE
 int Axon::input(short input_v, struct TortoiseTime &at_time)
 {
 	event_queue.insert(at_time, BIND(Axon));
@@ -134,7 +137,7 @@ int Neuron::numberOfConnections()
 	return axon.numberOfConnections();
 }
 
-#ifdef WITH_TORTOISELIB
+#ifdef WITH_TIMEQUEUE
 int Neuron::bound_input(short input_v, struct TortoiseTime &at_time)
 #else
 int Neuron::input(short input_v, struct TortoiseTime &at_time)
@@ -162,7 +165,7 @@ int Neuron::input(short input_v, struct TortoiseTime &at_time)
 	return 0;
 }
 
-#ifdef WITH_TORTOISELIB
+#ifdef WITH_TIMEQUEUE
 int Neuron::input(short input_v, struct TortoiseTime &at_time)
 {
 	event_queue.insert(at_time, BIND(Neuron));
@@ -215,7 +218,9 @@ int NeuralNet::handleDendriticBulge(Neuron *n, float bulge)
 	for (int i = 0; i <= scale; i++)
 		for (int j = 0; j <= scale; j++)
 			if (xpos + i < neurons.size() && ypos + j < neurons[xpos + i].size())
-				neurons[xpos + i][ypos + j].addDendriteOutput(n);
+				if (&neurons[xpos + i][ypos + j] != n)
+					neurons[xpos + i][ypos + j].addDendriteOutput(n);
+
 	return n->numberOfConnections();
 }
 
