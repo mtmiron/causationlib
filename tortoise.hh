@@ -33,7 +33,7 @@ struct TortoiseTime : timespec
 	bool operator> (unsigned short ms);
 	bool operator> (const TortoiseTime t2);
 	bool operator< (const TortoiseTime t2) const;
-	bool operator<= (const TortoiseTime t2);
+	bool operator<= (const TortoiseTime t2) const;
 	bool operator>= (const TortoiseTime t2);
 	bool operator== (const TortoiseTime t2);
 	bool operator== (const int i);
@@ -50,7 +50,8 @@ class TimeQueue
 
   public:
 	void insert(TortoiseTime, timed_call_t);
-	int nextIsEarlierThen(TortoiseTime &time);
+	void applyAllBefore(const TortoiseTime time);
+	int nextIsEarlierThan(TortoiseTime &time);
 	int applyNext();
 	int size();
 };
