@@ -109,7 +109,7 @@ void interval_step(vector<NeuralNet *> nets, TortoiseTime &at_time)
 void random_step(vector<NeuralNet *> nets, TortoiseTime &at_time)
 {
 	NeuralNet *net = nets[0];
-
+	
 	for (uint i = (rand() % opts.stepsize); i < net->neurons.size() - 10; i += (rand() % opts.stepsize))
 		for (uint j = (rand() % opts.stepsize); j < net->neurons[i].size() - 10; j += (rand() % opts.stepsize))
 			net->neurons[i][j].input(opts.input_strength, at_time);
@@ -144,8 +144,7 @@ int main(int argc, char **argv)
 			interval_step(nets, at_time);
 
 #ifdef WITH_TIMEQUEUE
-		while (BrainCell::event_queue.applyNext() != -1)
-			;
+		BrainCell::event_queue.applyAllBefore(at_time);
 #endif
 
 		for (uint n = 0; n < opts.layers; n++)
