@@ -35,16 +35,16 @@ Dendrite::Dendrite(Neuron *n) : BrainCell(n)
 }
 
 #ifdef WITH_TIMEQUEUE
-int Dendrite::bound_input(short input_v, struct TortoiseTime &at_time)
+int Dendrite::bound_input(short input_v, TortoiseTime at_time)
 #else
-int Dendrite::input(short input_v, struct TortoiseTime &at_time)
+int Dendrite::input(short input_v, TortoiseTime at_time)
 #endif
 {
 	return neuron->input(input_v, at_time);
 }
 
 #ifdef WITH_TIMEQUEUE
-int Dendrite::input(short input_v, struct TortoiseTime &at_time)
+int Dendrite::input(short input_v, TortoiseTime at_time)
 {
 	event_queue.insert(at_time, BIND(Dendrite));
 	return 0;
@@ -84,9 +84,9 @@ void Axon::addNeuronOutput(Neuron *n)
 }
 
 #ifdef WITH_TIMEQUEUE
-int Axon::bound_input(short input_v, struct TortoiseTime &at_time)
+int Axon::bound_input(short input_v, TortoiseTime at_time)
 #else
-int Axon::input(short input_v, struct TortoiseTime &at_time)
+int Axon::input(short input_v, TortoiseTime at_time)
 #endif
 {
 	at_time = at_time + propagation_time;
@@ -105,7 +105,7 @@ int Axon::input(short input_v, struct TortoiseTime &at_time)
 }
 
 #ifdef WITH_TIMEQUEUE
-int Axon::input(short input_v, struct TortoiseTime &at_time)
+int Axon::input(short input_v, TortoiseTime at_time)
 {
 	event_queue.insert(at_time, BIND(Axon));
 	return 0;
@@ -138,9 +138,9 @@ int Neuron::numberOfConnections()
 }
 
 #ifdef WITH_TIMEQUEUE
-int Neuron::bound_input(short input_v, struct TortoiseTime &at_time)
+int Neuron::bound_input(short input_v, TortoiseTime at_time)
 #else
-int Neuron::input(short input_v, struct TortoiseTime &at_time)
+int Neuron::input(short input_v, TortoiseTime at_time)
 #endif
 {
 	TortoiseTime time_delta(at_time - firetime);
@@ -153,12 +153,11 @@ int Neuron::input(short input_v, struct TortoiseTime &at_time)
 
 	if (at_time - input_time > excited_time)
 		voltage = resting_v;
-	else
-		input_time = at_time;
+	input_time = at_time;
 
 	if ( (voltage += input_v) >= action_v ) {
 		firetime = at_time;
-		input_time = 0;
+		voltage = resting_v;
 		return axon.input(fire_v, at_time);
 	}
 
@@ -166,7 +165,7 @@ int Neuron::input(short input_v, struct TortoiseTime &at_time)
 }
 
 #ifdef WITH_TIMEQUEUE
-int Neuron::input(short input_v, struct TortoiseTime &at_time)
+int Neuron::input(short input_v, TortoiseTime at_time)
 {
 	event_queue.insert(at_time, BIND(Neuron));
 	return 0;
@@ -175,7 +174,7 @@ int Neuron::input(short input_v, struct TortoiseTime &at_time)
 
 int Neuron::fire()
 {
-	struct TortoiseTime time;
+	TortoiseTime time;
 
 	clock_gettime(CLOCK_REALTIME, &time);
 	return input(abs(voltage - action_v), time);

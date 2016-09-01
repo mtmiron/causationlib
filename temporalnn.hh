@@ -20,9 +20,9 @@ class BrainCell
   protected:
 	TortoiseTime firetime;
 	TortoiseTime input_time;
-	unsigned short propagation_time = 1;
 
   public:
+	unsigned short propagation_time = 1;
 	static bool freeze_connections;
 	static TimeQueue event_queue;
 	Neuron *neuron;
@@ -31,9 +31,9 @@ class BrainCell
 	explicit BrainCell(Neuron *n);
 	Neuron *setNeuron(Neuron *owner);
 	NeuralNet *setNet(NeuralNet *owner);
-	virtual int input(short input_v, struct TortoiseTime &at_time) = 0;
+	virtual int input(short input_v, TortoiseTime at_time) = 0;
 #ifdef WITH_TIMEQUEUE
-	virtual int bound_input(short input_v, struct TortoiseTime &at_time) = 0;
+	virtual int bound_input(short input_v, TortoiseTime at_time) = 0;
 #endif
 };
 
@@ -51,9 +51,9 @@ class Dendrite : public BrainCell
 	float seekfactor = 0.1;
 	short clusterfactor = 1;
 	float bulge = 0;
-	int input(short input_v, struct TortoiseTime &at_time);
+	int input(short input_v, TortoiseTime at_time);
 #ifdef WITH_TIMEQUEUE
-	int bound_input(short input_v, struct TortoiseTime &at_time);
+	int bound_input(short input_v, TortoiseTime at_time);
 #endif
 	int grow();
 
@@ -76,9 +76,9 @@ class Axon : public BrainCell
 	void addDendriteOutput(Dendrite *d);
 	void addNeuronOutput(Neuron *n);
 	int numberOfConnections();
-	int input(short input_v, struct TortoiseTime &at_time);
+	int input(short input_v, TortoiseTime at_time);
 #ifdef WITH_TIMEQUEUE
-	int bound_input(short input_v, struct TortoiseTime &at_time);
+	int bound_input(short input_v, TortoiseTime at_time);
 #endif
 };
 
@@ -89,7 +89,7 @@ class Neuron : public BrainCell
   private:
   	// In milliseconds
 	unsigned short refractory_time = 50;
-	unsigned short excited_time = 5;
+	unsigned short excited_time = 0;
 	short refractory_v = -50;
 	short voltage = -80;
 	short resting_v = -80;
@@ -106,13 +106,13 @@ class Neuron : public BrainCell
 	void addDendriteOutput(Neuron *n);
 
   public:
-	explicit Neuron();
+	Neuron();
 	Neuron *setupDendrites();
 	Neuron *setupAxon();
 	int numberOfConnections();
-	int input(short input_v, struct TortoiseTime &at_time);
+	int input(short input_v, TortoiseTime at_time);
 #ifdef WITH_TIMEQUEUE
-	int bound_input(short input_v, struct TortoiseTime &at_time);
+	int bound_input(short input_v, TortoiseTime at_time);
 #endif
 	int fire();
 };
@@ -126,7 +126,7 @@ class NeuralNet
 	void connectTo(NeuralNet *net);
 	int handleDendriticBulge(Neuron *n, float bulge);
 	cv::Mat createConnectionDensityImage(int height, int width);
-	cv::Mat createCurrentActivityImage(int height, int width, struct TortoiseTime &at_time);
+	cv::Mat createCurrentActivityImage(int height, int width, TortoiseTime at_time, int fade_time = 1);
 };
 
 
