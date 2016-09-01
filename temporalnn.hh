@@ -1,5 +1,5 @@
-#ifndef _TEMPORALNN_HH_INCLUDED
-#define _TEMPORALNN_HH_INCLUDED 1
+#ifndef TEMPORALNN_HH_INCLUDED
+#define TEMPORALNN_HH_INCLUDED 1
 
 #include <math.h>
 #include <time.h>
@@ -20,9 +20,9 @@ class BrainCell
   protected:
 	TortoiseTime firetime;
 	TortoiseTime input_time;
+	unsigned short propagation_time = 1;
 
   public:
-	unsigned short propagation_time = 1;
 	static bool freeze_connections;
 	static TimeQueue event_queue;
 	Neuron *neuron;
@@ -115,6 +115,7 @@ class Neuron : public BrainCell
 	int bound_input(short input_v, TortoiseTime at_time);
 #endif
 	int fire();
+	void setPropagationTime(int prop);
 };
 
 class NeuralNet

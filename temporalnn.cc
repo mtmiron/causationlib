@@ -190,6 +190,14 @@ void Neuron::addNeuronOutput(Neuron *n)
 	axon.addNeuronOutput(n);
 }
 
+void Neuron::setPropagationTime(int prop)
+{
+	this->propagation_time = prop;
+	axon.propagation_time = prop;
+	for (uint i = 0; i < dendrites.size(); i++)
+		dendrites[i].propagation_time = prop;
+}
+
 
 /*
  * class NeuralNet
@@ -227,7 +235,6 @@ void NeuralNet::connectTo(NeuralNet *net)
 {
 	for (uint i = 0; i < this->neurons.size(); i++)
 		for (uint j = 0; j < this->neurons[i].size(); j++)
-			if (i < net->neurons.size() && j < net->neurons[i].size())
-				this->neurons[i][j].addNeuronOutput(&net->neurons[i][j]);
+			this->neurons[i][j].addNeuronOutput(&net->neurons[i][j]);
 	return;
 }
