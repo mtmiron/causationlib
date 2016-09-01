@@ -4,28 +4,32 @@
 #include <opencv2/highgui.hpp>
 #include <iostream>
 
-#define DEFAULT_STEP_SIZE 10
-#define DEFAULT_NET_HEIGHT 600
-#define DEFAULT_NET_WIDTH 800
+#define DEFAULT_STEP_SIZE 50
+#define DEFAULT_NET_HEIGHT 360
+#define DEFAULT_NET_WIDTH 480
 #define DEFAULT_LOOP_TIME 10
 #define DEFAULT_INPUT_STRENGTH 50
 #define DEFAULT_LAYERS 1
+#define DEFAULT_FADE_TIME 1
+#define DEFAULT_PROPAGATION_TIME 1
 
 using namespace std;
 using namespace cv;
 
 
 struct options {
-	int stepsize;
-	int height;
-	int width;
-	int loop_time;
-	int input_strength;
-	uint layers;
-	bool random_step;
-	bool freeze_connections;
-	bool no_density_image;
-	bool no_activity_image;
+	int stepsize = DEFAULT_STEP_SIZE;
+	int height = DEFAULT_NET_HEIGHT;
+	int width = DEFAULT_NET_WIDTH;
+	int loop_time = DEFAULT_LOOP_TIME;
+	int input_strength = DEFAULT_INPUT_STRENGTH;
+	uint layers = DEFAULT_LAYERS;
+	int fade_time = DEFAULT_FADE_TIME;
+	int propagation_time = DEFAULT_PROPAGATION_TIME;
+	bool random_step = false;
+	bool freeze_connections = false;
+	bool no_density_image = false;
+	bool no_activity_image = false;
 };
 
 struct options opts;
@@ -38,6 +42,8 @@ void print_help(char *argv)
 		"\t\t-a\tDon't draw neural activity image\n"
 		"\t\t-r\tRandom step size for neuron\n"
 		"\t\t-f\tDon't self assemble neurons (freeze state)\n"
+		"\t\t-p\tPropagation time (time from neuron firing to hitting next neuron)\n"
+		"\t\t-F ARG\tFade time for activity image\n"
 		"\t\t-s ARG\tStep size for neuron input loop\n"
 		"\t\t-x ARG\tWidth of neural net\n"
 		"\t\t-y ARG\tHeight of neural net\n"
@@ -50,11 +56,10 @@ void print_help(char *argv)
 
 struct options parse_args(int argc, char **argv)
 {
-	struct options opts = { DEFAULT_STEP_SIZE, DEFAULT_NET_HEIGHT, DEFAULT_NET_WIDTH,
-								DEFAULT_LOOP_TIME, DEFAULT_INPUT_STRENGTH, DEFAULT_LAYERS, false };
+	struct options opts;
 	int c = 0;
 
-	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:rf")) != -1)
+	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:rfF:p:")) != -1)
 	{
 		switch (c) {
 		case 's':
@@ -84,6 +89,11 @@ struct options parse_args(int argc, char **argv)
 		case 'r':
 			opts.random_step = true;
 			break;
+		case 'p':
+			opts.propagation_time = atoi(optarg);
+			break;
+		case 'F':
+			opts.fade_time = atoi(optarg);
 		case 'f':
 			opts.freeze_connections = true;
 			BrainCell::freeze_connections = true;
@@ -110,9 +120,24 @@ void random_step(vector<NeuralNet *> nets, TortoiseTime &at_time)
 {
 	NeuralNet *net = nets[0];
 	
-	for (uint i = (rand() % opts.stepsize); i < net->neurons.size() - 10; i += (rand() % opts.stepsize))
-		for (uint j = (rand() % opts.stepsize); j < net->neurons[i].size() - 10; j += (rand() % opts.stepsize))
+	for (uint i = (random() % opts.stepsize); i < net->neurons.size() - 10; i += (random() % opts.stepsize))
+		for (uint j = (random() % opts.stepsize); j < net->neurons[i].size() - 10; j += (random() % opts.stepsize))
 			net->neurons[i][j].input(opts.input_strength, at_time);
+}
+
+void handle_keypress(uchar key)
+{
+	switch (key & 0xff) {
+	case 'p':
+		while ( ((key = waitKey(0)) & 0xff) != 'p')
+			if (key == 27)
+				exit(0);
+		break;
+	case 'c':
+		BrainCell::event_queue.clear();
+		cout << "Cleared" << endl;
+		break;
+	}
 }
 
 int main(int argc, char **argv)
@@ -123,20 +148,28 @@ int main(int argc, char **argv)
 	char windowname[256] = { 0 };
 
 	opts = parse_args(argc, argv);
-	fprintf(stdout, "Images are updated every %dms; press ESC to exit\n"
+	fprintf(stdout, "Images are updated every %dms; press ESC to exit, "
+			"'p' to toggle pause, 'c' to clear the firing queue\n"
 			"Neuron input strength: %dmV  Neuron step size: %d  Net height: %d  Net width: %d  "
-			"Firing wave loop time: %dms  Net layers: %d\n",
+			"Firing wave loop time: %dms  Net layers: %d  Fade time: %d  Propagation time: %dms\n",
 			opts.loop_time, opts.input_strength, opts.stepsize, opts.height,
-			opts.width, opts.loop_time, opts.layers);
+			opts.width, opts.loop_time, opts.layers, opts.fade_time, opts.propagation_time);
 
-	for (uint i = 0; i < opts.layers; i++)
+	for (uint i = 0; i < opts.layers; i++) {
 		nets.push_back(new NeuralNet(opts.width, opts.height));
+		for (int x = 0; x < opts.width; x++)
+			for (int y = 0; y < opts.height; y++)
+				nets[i]->neurons[x][y].propagation_time = opts.propagation_time;
+	}
 	for (uint i = 0; i < opts.layers - 1; i++)
 		nets[i]->connectTo(nets[i+1]);
 
-	srand((int)at_time.tv_sec);
+	clock_gettime(CLOCK_REALTIME, &at_time);
+	srandom((int)at_time.tv_sec);
 	for (uchar key = 0; key != 27; key = waitKey(opts.loop_time))
 	{
+		handle_keypress(key);
+
 		clock_gettime(CLOCK_REALTIME, &at_time);
 		if (opts.random_step)
 			random_step(nets, at_time);
@@ -144,6 +177,8 @@ int main(int argc, char **argv)
 			interval_step(nets, at_time);
 
 #ifdef WITH_TIMEQUEUE
+//		while (BrainCell::event_queue.applyNext() != -1)
+//			;
 		BrainCell::event_queue.applyAllBefore(at_time);
 #endif
 
@@ -151,13 +186,13 @@ int main(int argc, char **argv)
 		{
 			sprintf(windowname, "layer #%d: firing neurons", n);
 			if (!opts.no_activity_image) {
-				activity_image = nets[n]->createCurrentActivityImage(480, 360, at_time);
+				activity_image = nets[n]->createCurrentActivityImage(DEFAULT_NET_WIDTH, DEFAULT_NET_HEIGHT, at_time, opts.fade_time);
 				imshow(windowname, activity_image);
 			}
 
 			sprintf(windowname, "layer #%d: connection densities", n);
 			if (!opts.no_density_image) {
-				densities_image = nets[n]->createConnectionDensityImage(480, 360);
+				densities_image = nets[n]->createConnectionDensityImage(DEFAULT_NET_WIDTH, DEFAULT_NET_HEIGHT);
 				imshow(windowname, densities_image);
 			}
 		}
