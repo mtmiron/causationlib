@@ -54,6 +54,7 @@ class TimeQueue
 	int nextIsEarlierThan(TortoiseTime &time);
 	int applyNext();
 	int size();
+	void clear();
 };
 
 #endif

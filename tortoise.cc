@@ -47,6 +47,13 @@ int TimeQueue::nextIsEarlierThan(TortoiseTime &time)
 	return (TortoiseTime)next->first <= time;
 }
 
+void TimeQueue::clear()
+{
+	lock_guard<mutex> lock(q_insert_mutex);
+	lock_guard<mutex> lock2(q_apply_mutex);
+	queue.clear();
+}
+
 int TimeQueue::applyNext()
 {
 	if (queue.size() == 0)
@@ -154,7 +161,15 @@ TortoiseTime TortoiseTime::operator+(const TortoiseTime t2)
 
 TortoiseTime TortoiseTime::operator-(const TortoiseTime t2)
 {
-	struct timespec ret = { this->tv_sec - t2.tv_sec, this->tv_nsec - t2.tv_nsec };
+	struct timespec ret = { this->tv_sec - t2.tv_sec, 0 };
+	long long ns = this->tv_nsec - t2.tv_nsec;
+
+	if (ns < 0) {
+		ret.tv_sec += ns / pow(10,9);
+		ret.tv_nsec = pow(10,9) + ns;
+	} else {
+		ret.tv_nsec = ns % (long)pow(10,9);
+	}
 
 	return ret;
 }
