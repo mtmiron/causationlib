@@ -159,8 +159,8 @@ void print_status()
 {
 	fprintf(stdout, "Neuron input strength: %dmV  Neuron step size: %d  Net height: %d  Net width: %d  "
 			"Firing wave loop time: %dms  Net layers: %d  Fade time: %d  Propagation time: %dms\n"
+			"Images are updated every %dms\n\n"
 
-			"Images are updated every %dms\n"
 			"Keymap:\n"
 			"ESC - exit\n"
 			"'p' - toggle pause\n"
@@ -169,8 +169,9 @@ void print_status()
 			"'a' - toggle updating of firing neurons window(s)\n"
 			"'c' - clear the event queue\n"
 			"'f' - freeze connections\n",
-			opts.loop_time, opts.input_strength, opts.stepsize, opts.height,
-			opts.width, opts.loop_time, opts.layers, opts.fade_time, opts.propagation_time);
+			opts.input_strength, opts.stepsize, opts.height, opts.width,
+			opts.loop_time, opts.layers, opts.fade_time, opts.propagation_time,
+			opts.loop_time);
 }
 
 
