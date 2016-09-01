@@ -109,6 +109,34 @@ struct options parse_args(int argc, char **argv)
 	return opts;
 }
 
+void handle_keypress(uchar key)
+{
+	switch (key & 0xff) {
+	case 'p':
+		while ( ((key = waitKey(0)) & 0xff) != 'p')
+			if (key == 27)
+				exit(0);
+		break;
+	case 'c':
+		cout << "Cleared " << BrainCell::event_queue.clear() << " pending action potential and/or assembly events" << endl;
+		break;
+	case 'f':
+		BrainCell::freeze_connections = !BrainCell::freeze_connections;
+		cout << "Neuron connections " << (BrainCell::freeze_connections ? "frozen" : "unfrozen") << endl;
+		break;
+	case 'r':
+		opts.random_step = !opts.random_step;
+		cout << "Random stimulation of 1 neuron per step size " << (opts.random_step ? "enabled" : "disabled") << endl;
+		break;
+	case 'a':
+		opts.no_activity_image = !opts.no_activity_image;
+		break;
+	case 'd':
+		opts.no_density_image = !opts.no_density_image;
+		break;
+	}
+}
+
 void interval_step(vector<NeuralNet *> nets, TortoiseTime &at_time)
 {
 	NeuralNet *net = nets[0];
@@ -127,36 +155,37 @@ void random_step(vector<NeuralNet *> nets, TortoiseTime &at_time)
 			net->neurons[i][j].input(opts.input_strength, at_time);
 }
 
-void handle_keypress(uchar key)
+void print_status()
 {
-	switch (key & 0xff) {
-	case 'p':
-		while ( ((key = waitKey(0)) & 0xff) != 'p')
-			if (key == 27)
-				exit(0);
-		break;
-	case 'c':
-		BrainCell::event_queue.clear();
-		cout << "Cleared" << endl;
-		break;
-	}
+	fprintf(stdout, "Neuron input strength: %dmV  Neuron step size: %d  Net height: %d  Net width: %d  "
+			"Firing wave loop time: %dms  Net layers: %d  Fade time: %d  Propagation time: %dms\n"
+
+			"Images are updated every %dms\n"
+			"Keymap:\n"
+			"ESC - exit\n"
+			"'p' - toggle pause\n"
+			"'r' - toggle random firing\n"
+			"'d' - toggle updating of connection densities window(s)\n"
+			"'a' - toggle updating of firing neurons window(s)\n"
+			"'c' - clear the event queue\n"
+			"'f' - freeze connections\n",
+			opts.loop_time, opts.input_strength, opts.stepsize, opts.height,
+			opts.width, opts.loop_time, opts.layers, opts.fade_time, opts.propagation_time);
 }
+
 
 int main(int argc, char **argv)
 {
 	vector<NeuralNet *> nets;
 	Mat densities_image, activity_image;
-	struct TortoiseTime at_time;
+	TortoiseTime at_time;
 	char windowname[256] = { 0 };
-	opts = parse_args(argc, argv);
-	fprintf(stdout, "Images are updated every %dms; press ESC to exit, "
-			"'p' to toggle pause, 'c' to clear the firing queue\n"
-			"Neuron input strength: %dmV  Neuron step size: %d  Net height: %d  Net width: %d  "
-			"Firing wave loop time: %dms  Net layers: %d  Fade time: %d  Propagation time: %dms\n",
-			opts.loop_time, opts.input_strength, opts.stepsize, opts.height,
-			opts.width, opts.loop_time, opts.layers, opts.fade_time, opts.propagation_time);
 
-	nets.clear();
+	opts = parse_args(argc, argv);
+	clock_gettime(CLOCK_REALTIME, &at_time);
+	srandom((int)at_time.tv_sec);
+	print_status();
+
 	for (uint i = 0; i < opts.layers; i++) {
 		nets.push_back(new NeuralNet(opts.width, opts.height));
 		for (int x = 0; x < opts.width; x++)
@@ -166,8 +195,6 @@ int main(int argc, char **argv)
 	for (uint i = 0; i < opts.layers - 1; i++)
 		nets[i]->connectTo(nets[i+1]);
 
-	clock_gettime(CLOCK_REALTIME, &at_time);
-	srandom((int)at_time.tv_sec);
 	for (uchar key = 0; key != 27; key = waitKey(opts.loop_time))
 	{
 		handle_keypress(key);
