@@ -17,9 +17,6 @@ int main()
 	clock_gettime(CLOCK_REALTIME, &t2);
 	clock_gettime(CLOCK_REALTIME, &t3);
 
-	t2.tv_sec++;
-	t3.tv_sec += 2;
-
 	cout << t1 << "\tt1" << endl << t2 << "\tt2" << endl << t3 << "\tt3" << endl << endl;
 	cout << t2 - t1 << "\tt2 - t1" << endl;
 	cout << t3 - t1 << "\tt3 - t1" << endl;
@@ -30,5 +27,13 @@ int main()
 	cout << t1 + 150 << "\tt1 + 150ms" << endl << endl;
 	cout << t1 - 5 << "\tt1 - 5ms" << endl;
 	cout << t1 - 50 << "\tt1 - 50ms" << endl;
-	cout << t1 - 150 << "\tt1 - 150ms" << endl;
+	cout << t1 - 150 << "\tt1 - 150ms" << endl << endl;
+
+	cout << "t1 <= t1: " << (t1 <= t1) << endl;
+	cout << "t1 <= t2: " << (t1 <= t2) << endl;
+	cout << "t1 >= t2: " << (t1 >= t2) << endl;
+	cout << "t1 == t1: " << (t1 == t1) << endl;
+	cout << "t1 > t2:  " << (t1 > t2) << endl;
+	cout << "t1 < t2:  " << (t1 < t2) << endl;
+	cout << "t1 < t1:  " << (t1 < t1) << endl;
 }
