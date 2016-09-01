@@ -120,8 +120,8 @@ void random_step(vector<NeuralNet *> nets, TortoiseTime &at_time)
 {
 	NeuralNet *net = nets[0];
 	
-	for (uint i = (random() % opts.stepsize); i < net->neurons.size() - 10; i += (random() % opts.stepsize))
-		for (uint j = (random() % opts.stepsize); j < net->neurons[i].size() - 10; j += (random() % opts.stepsize))
+	for (uint i = 10 + (random() % opts.stepsize); i < net->neurons.size() - 10; i += (random() % opts.stepsize))
+		for (uint j = 10 + (random() % opts.stepsize); j < net->neurons[i].size() - 10; j += (random() % opts.stepsize))
 			net->neurons[i][j].input(opts.input_strength, at_time);
 }
 
@@ -155,11 +155,12 @@ int main(int argc, char **argv)
 			opts.loop_time, opts.input_strength, opts.stepsize, opts.height,
 			opts.width, opts.loop_time, opts.layers, opts.fade_time, opts.propagation_time);
 
+	nets.clear();
 	for (uint i = 0; i < opts.layers; i++) {
 		nets.push_back(new NeuralNet(opts.width, opts.height));
 		for (int x = 0; x < opts.width; x++)
 			for (int y = 0; y < opts.height; y++)
-				nets[i]->neurons[x][y].propagation_time = opts.propagation_time;
+				nets[i]->neurons[x][y].setPropagationTime(opts.propagation_time);
 	}
 	for (uint i = 0; i < opts.layers - 1; i++)
 		nets[i]->connectTo(nets[i+1]);
@@ -179,7 +180,7 @@ int main(int argc, char **argv)
 #ifdef WITH_TIMEQUEUE
 //		while (BrainCell::event_queue.applyNext() != -1)
 //			;
-		BrainCell::event_queue.applyAllBefore(at_time);
+		BrainCell::event_queue.applyAllUpto(at_time);
 #endif
 
 		for (uint n = 0; n < opts.layers; n++)
