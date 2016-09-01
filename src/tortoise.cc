@@ -51,11 +51,16 @@ int TimeQueue::nextIsEarlierThan(TortoiseTime &time)
 	return (TortoiseTime)next->first <= time;
 }
 
-void TimeQueue::clear()
+int TimeQueue::clear()
 {
+	int n;
+
 	lock_guard<mutex> lock(q_insert_mutex);
 	lock_guard<mutex> lock2(q_apply_mutex);
+	lock_guard<mutex> lock3(q_erase_mutex);
+	n = queue.size();
 	queue.clear();
+	return n;
 }
 
 int TimeQueue::applyNext()
