@@ -63,7 +63,7 @@ Mat NeuralNet::createCurrentActivityImage(int height, int width, TortoiseTime at
 		for (int j = 0; j < y; j++)
 		{
 			time_delta = at_time - this->neurons[i][j].firetime;
-			if (time_delta > oldest || time_delta <= 0)
+			if (time_delta > oldest || time_delta < 0)
 				continue;
 
 			diff = (time_delta.tv_sec * pow(10,9) + time_delta.tv_nsec) / (max / 255);
