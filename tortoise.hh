@@ -1,5 +1,5 @@
-#ifndef _TORTOISE_HH_INCLUDED
-#define _TORTOISE_HH_INCLUDED 1
+#ifndef TORTOISE_HH_INCLUDED
+#define TORTOISE_HH_INCLUDED 1
 
 #include <time.h>
 #include <algorithm>
@@ -10,9 +10,6 @@
 #include <math.h>
 
 using namespace std;
-
-static mutex q_insert_mutex;
-static mutex q_apply_mutex;
 
 
 struct TortoiseTime : timespec
@@ -47,10 +44,14 @@ class TimeQueue
 {
   private:
 	multimap< TortoiseTime, timed_call_t > queue;
+	mutex q_insert_mutex;
+	mutex q_apply_mutex;
+	mutex q_erase_mutex;
+
 
   public:
 	void insert(TortoiseTime, timed_call_t);
-	void applyAllBefore(const TortoiseTime time);
+	void applyAllUpto(const TortoiseTime time);
 	int nextIsEarlierThan(TortoiseTime &time);
 	int applyNext();
 	int size();

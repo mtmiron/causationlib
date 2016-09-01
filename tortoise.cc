@@ -22,20 +22,24 @@ void TimeQueue::insert(TortoiseTime time, timed_call_t func)
 	return;
 }
 
-void TimeQueue::applyAllBefore(const TortoiseTime time)
+void TimeQueue::applyAllUpto(const TortoiseTime time)
 {
-	if (queue.size() == 0)
-		return;
+	auto lambda = [=](const TortoiseTime t) {
+		lock_guard<mutex> lock(q_apply_mutex);
+		if (queue.size() == 0)
+			return -1;
+		auto next = queue.begin();
+		if (next->first <= t) {
+			timed_call_t func = next->second;
+			queue.erase(next);
+			return func();
+		} else {
+			return -1;
+		}
+	};
 
-	lock_guard<mutex> lock(q_apply_mutex);
-	auto start = queue.begin();
-	auto next = queue.begin();
-	while (next != queue.end() && next->first <= time) {
-		next->second();
-		next++;
-	}
-
-	queue.erase(start, next);
+	while (lambda(time) != -1)
+		;
 }
 
 int TimeQueue::nextIsEarlierThan(TortoiseTime &time)
@@ -61,9 +65,9 @@ int TimeQueue::applyNext()
 
 	lock_guard<mutex> lock(q_apply_mutex);
 	auto next = queue.begin();
-	int ret = next->second();
+	timed_call_t ret = next->second;
 	queue.erase(next);
-	return ret;
+	return ret();
 }
 
 
@@ -123,7 +127,7 @@ bool TortoiseTime::operator>(unsigned short ms)
 bool TortoiseTime::operator<=(const TortoiseTime t2) const
 {
 	return ( (this->tv_sec < t2.tv_sec)
-			|| ( (this->tv_sec == t2.tv_sec)
+			|| ((this->tv_sec == t2.tv_sec)
 				&& (this->tv_nsec <= t2.tv_nsec)) );
 }
 
