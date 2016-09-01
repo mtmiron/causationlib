@@ -134,6 +134,16 @@ void handle_keypress(uchar key)
 	case 'd':
 		opts.no_density_image = !opts.no_density_image;
 		break;
+	case '-':
+	case '_':
+		if (opts.stepsize > 1)
+			opts.stepsize--;
+		cout << "Step size: " << opts.stepsize << endl;
+		break;
+	case '+':
+	case '=':
+		cout << "Step size: " << ++opts.stepsize << endl;
+		break;
 	}
 }
 
@@ -168,12 +178,14 @@ void print_status()
 			"'d' - toggle updating of connection densities window(s)\n"
 			"'a' - toggle updating of firing neurons window(s)\n"
 			"'c' - clear the event queue\n"
-			"'f' - freeze connections\n",
+			"'f' - freeze connections\n"
+			"'-' - decrease step size\n"
+			"'+' - increase step size\n",
+
 			opts.input_strength, opts.stepsize, opts.height, opts.width,
 			opts.loop_time, opts.layers, opts.fade_time, opts.propagation_time,
 			opts.loop_time);
 }
-
 
 int main(int argc, char **argv)
 {
