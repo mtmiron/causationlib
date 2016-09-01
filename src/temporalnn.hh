@@ -32,15 +32,10 @@ class BrainCell
 	Neuron *setNeuron(Neuron *owner);
 	NeuralNet *setNet(NeuralNet *owner);
 	virtual int input(short input_v, TortoiseTime at_time) = 0;
-#ifdef WITH_TIMEQUEUE
+#ifdef BUILD_WITH_TIMEQUEUE
 	virtual int bound_input(short input_v, TortoiseTime at_time) = 0;
 #endif
 };
-
-// without this, the compiler leaves the symbol undefined in the object file
-// -- don't ask me, but (compiler == happy) == (programmer == happy)
-TimeQueue BrainCell::event_queue;
-bool BrainCell::freeze_connections;
 
 class Dendrite : public BrainCell
 {
@@ -52,7 +47,7 @@ class Dendrite : public BrainCell
 	short clusterfactor = 1;
 	float bulge = 0;
 	int input(short input_v, TortoiseTime at_time);
-#ifdef WITH_TIMEQUEUE
+#ifdef BUILD_WITH_TIMEQUEUE
 	int bound_input(short input_v, TortoiseTime at_time);
 #endif
 	int grow();
@@ -77,7 +72,7 @@ class Axon : public BrainCell
 	void addNeuronOutput(Neuron *n);
 	int numberOfConnections();
 	int input(short input_v, TortoiseTime at_time);
-#ifdef WITH_TIMEQUEUE
+#ifdef BUILD_WITH_TIMEQUEUE
 	int bound_input(short input_v, TortoiseTime at_time);
 #endif
 };
@@ -111,7 +106,7 @@ class Neuron : public BrainCell
 	Neuron *setupAxon();
 	int numberOfConnections();
 	int input(short input_v, TortoiseTime at_time);
-#ifdef WITH_TIMEQUEUE
+#ifdef BUILD_WITH_TIMEQUEUE
 	int bound_input(short input_v, TortoiseTime at_time);
 #endif
 	int fire();

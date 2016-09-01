@@ -33,6 +33,8 @@ struct options {
 };
 
 struct options opts;
+extern TimeQueue BrainCell::event_queue;
+extern bool BrainCell::freeze_connections;
 
 void print_help(char *argv)
 {
@@ -146,7 +148,6 @@ int main(int argc, char **argv)
 	Mat densities_image, activity_image;
 	struct TortoiseTime at_time;
 	char windowname[256] = { 0 };
-
 	opts = parse_args(argc, argv);
 	fprintf(stdout, "Images are updated every %dms; press ESC to exit, "
 			"'p' to toggle pause, 'c' to clear the firing queue\n"
@@ -177,9 +178,7 @@ int main(int argc, char **argv)
 		else
 			interval_step(nets, at_time);
 
-#ifdef WITH_TIMEQUEUE
-//		while (BrainCell::event_queue.applyNext() != -1)
-//			;
+#ifdef BUILD_WITH_TIMEQUEUE
 		BrainCell::event_queue.applyAllUpto(at_time);
 #endif
 

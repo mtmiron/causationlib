@@ -11,7 +11,6 @@
 
 using namespace std;
 
-
 struct TortoiseTime : timespec
 {
 	TortoiseTime();

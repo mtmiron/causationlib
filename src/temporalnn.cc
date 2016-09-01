@@ -34,7 +34,7 @@ Dendrite::Dendrite(Neuron *n) : BrainCell(n)
 	this->neuron = n;
 }
 
-#ifdef WITH_TIMEQUEUE
+#ifdef BUILD_WITH_TIMEQUEUE
 int Dendrite::bound_input(short input_v, TortoiseTime at_time)
 #else
 int Dendrite::input(short input_v, TortoiseTime at_time)
@@ -43,7 +43,7 @@ int Dendrite::input(short input_v, TortoiseTime at_time)
 	return neuron->input(input_v, at_time);
 }
 
-#ifdef WITH_TIMEQUEUE
+#ifdef BUILD_WITH_TIMEQUEUE
 int Dendrite::input(short input_v, TortoiseTime at_time)
 {
 	event_queue.insert(at_time, BIND(Dendrite));
@@ -83,7 +83,7 @@ void Axon::addNeuronOutput(Neuron *n)
 	n_output.insert(n);
 }
 
-#ifdef WITH_TIMEQUEUE
+#ifdef BUILD_WITH_TIMEQUEUE
 int Axon::bound_input(short input_v, TortoiseTime at_time)
 #else
 int Axon::input(short input_v, TortoiseTime at_time)
@@ -104,7 +104,7 @@ int Axon::input(short input_v, TortoiseTime at_time)
 	return dist_voltage;
 }
 
-#ifdef WITH_TIMEQUEUE
+#ifdef BUILD_WITH_TIMEQUEUE
 int Axon::input(short input_v, TortoiseTime at_time)
 {
 	event_queue.insert(at_time, BIND(Axon));
@@ -137,7 +137,7 @@ int Neuron::numberOfConnections()
 	return axon.numberOfConnections();
 }
 
-#ifdef WITH_TIMEQUEUE
+#ifdef BUILD_WITH_TIMEQUEUE
 int Neuron::bound_input(short input_v, TortoiseTime at_time)
 #else
 int Neuron::input(short input_v, TortoiseTime at_time)
@@ -164,7 +164,7 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 	return 0;
 }
 
-#ifdef WITH_TIMEQUEUE
+#ifdef BUILD_WITH_TIMEQUEUE
 int Neuron::input(short input_v, TortoiseTime at_time)
 {
 	event_queue.insert(at_time, BIND(Neuron));
