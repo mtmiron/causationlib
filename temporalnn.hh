@@ -1,92 +1,102 @@
-#include <vector>
+#ifndef TEMPORALNN_HH_INCLUDED
+#define TEMPORALNN_HH_INCLUDED 1
+
 #include <math.h>
 #include <time.h>
+#include <vector>
+#include <unordered_set>
 #include <opencv2/core.hpp>
+#include "tortoise.hh"
 
 
-/*
- * A big, big caveat with the simplicity of this implementation: events do not
- * actually take place at the specified time provided by an argument -- there is no
- * dispatch queue, signal timers, or anything of the sort.  The time value is only
- * used to calculate summed voltage differences.
- */
-namespace TemporalNet {
 using namespace std;
 
 class Neuron;
 class NeuralNet;
 
 
-long long unsigned nano_to_milli(long long unsigned nano);
-long long unsigned milli_to_nano(long long unsigned milli);
-long long unsigned timespec_to_ms(struct timespec time);
-struct timespec ms_to_timespec(long long unsigned ltime);
-long long timespec_minus(struct timespec &time, long long ms);
-struct timespec timespec_minus(struct timespec &time1, struct timespec &time2);
-long long timespec_plus(struct timespec &time, long long ms);
-struct timespec timespec_plus(struct timespec &time1, struct timespec &time2);
+class BrainCell
+{
+  protected:
+	TortoiseTime firetime;
+	TortoiseTime input_time;
+	unsigned short propagation_time = 1;
 
+  public:
+	static bool freeze_connections;
+	static TimeQueue event_queue;
+	Neuron *neuron;
+	NeuralNet *net;
 
-class Dendrite
+	explicit BrainCell(Neuron *n);
+	Neuron *setNeuron(Neuron *owner);
+	NeuralNet *setNet(NeuralNet *owner);
+	virtual int input(short input_v, TortoiseTime at_time) = 0;
+#ifdef WITH_TIMEQUEUE
+	virtual int bound_input(short input_v, TortoiseTime at_time) = 0;
+#endif
+};
+
+// without this, the compiler leaves the symbol undefined in the object file
+// -- don't ask me, but (compiler == happy) == (programmer == happy)
+TimeQueue BrainCell::event_queue;
+bool BrainCell::freeze_connections;
+
+class Dendrite : public BrainCell
 {
   friend class Neuron;
   friend class Axon;
   private:
 	short delaytime = 0;
-	double seekfactor = 0;
-	short clusterfactor = 0;
-	double bulge = 0;
-	struct timespec firetime = { 0 };
-	int input(short input_v);
-	int grow(short input_v);
-	Neuron *neuron = NULL;
+	float seekfactor = 0.1;
+	short clusterfactor = 1;
+	float bulge = 0;
+	int input(short input_v, TortoiseTime at_time);
+#ifdef WITH_TIMEQUEUE
+	int bound_input(short input_v, TortoiseTime at_time);
+#endif
+	int grow();
 
   public:
-	Dendrite(short delay = 0, float seek = 0.1, short cluster = 1);
-	Neuron *setNeuron(Neuron *owner);
+	explicit Dendrite(Neuron *n);
 };
 
 
-class Axon
+class Axon : public BrainCell
 {
+  friend class Neuron;
   private:
 	short vesicles = 0;
-	struct timespec firetime = { 0 };
-	Neuron *neuron = NULL;
 
-	vector<Dendrite *> d_output;
-	vector<Neuron *> n_output;
+	unordered_set<Dendrite *> d_output;
+	unordered_set<Neuron *> n_output;
 
   public:
-	Axon();
-	Neuron *setNeuron(Neuron *owner);
+	explicit Axon(Neuron *n);
 	void addDendriteOutput(Dendrite *d);
 	void addNeuronOutput(Neuron *n);
 	int numberOfConnections();
-	int fire(short input_v, struct timespec at_time = { 0 });
+	int input(short input_v, TortoiseTime at_time);
+#ifdef WITH_TIMEQUEUE
+	int bound_input(short input_v, TortoiseTime at_time);
+#endif
 };
 
 
-class Neuron
+class Neuron : public BrainCell
 {
   friend class NeuralNet;
-  friend class Dendrite;
-  friend class Axon;
   private:
   	// In milliseconds
 	unsigned short refractory_time = 50;
-	unsigned short excited_time = 20;
+	unsigned short excited_time = 0;
 	short refractory_v = -50;
 	short voltage = -80;
 	short resting_v = -80;
 	short action_v = -30;
 	short fire_v = 50;
-	short propagation_time = 5;
 	int x = 0;
 	int y = 0;
-	struct timespec firetime = { 0 };
-	struct timespec inputtime = { 0 };
-	NeuralNet *net = NULL;
 
   protected:
 	Axon axon;
@@ -97,15 +107,15 @@ class Neuron
 
   public:
 	Neuron();
-	Neuron(int xarg, int yarg);
-	Neuron *setNet(NeuralNet *owner);
 	Neuron *setupDendrites();
 	Neuron *setupAxon();
-	int handleDendriticBulge(double bulge);
 	int numberOfConnections();
-	int input(short input_v = 1);
-	int input(short input_v, struct timespec at_time);
+	int input(short input_v, TortoiseTime at_time);
+#ifdef WITH_TIMEQUEUE
+	int bound_input(short input_v, TortoiseTime at_time);
+#endif
 	int fire();
+	void setPropagationTime(int prop);
 };
 
 class NeuralNet
@@ -113,12 +123,12 @@ class NeuralNet
   public:
 	vector< vector<Neuron> > neurons;
 
-	NeuralNet(int x = 100, int y = 100);
-	int handleDendriticBulge(Neuron *n, double bulge);
-	void setupNeurons();
-	cv::Mat createConnectionDensityImage(int height, int width);
-	cv::Mat createCurrentActivityImage(int height, int width, struct timespec at_time = { 0 });
+	explicit NeuralNet(int x = 100, int y = 100);
 	void connectTo(NeuralNet *net);
+	int handleDendriticBulge(Neuron *n, float bulge);
+	cv::Mat createConnectionDensityImage(int height, int width);
+	cv::Mat createCurrentActivityImage(int height, int width, TortoiseTime at_time, int fade_time = 1);
 };
 
-} // namespace
+
+#endif

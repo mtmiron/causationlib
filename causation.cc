@@ -17,7 +17,6 @@
 << "                                                                      "\
 << '\x0D'
 
-using namespace TemporalNet;
 
 /*
 "0: CAP_OPENNI_DEPTH_MAP 	Depth values in mm (CV_16UC1)",
