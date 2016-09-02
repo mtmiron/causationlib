@@ -84,7 +84,7 @@ class Neuron : public BrainCell
   private:
   	// In milliseconds
 	unsigned short refractory_time = 50;
-	unsigned short excited_time = 0;
+	unsigned short excited_time = 10;
 	short refractory_v = -50;
 	short voltage = -80;
 	short resting_v = -80;
@@ -123,6 +123,7 @@ class NeuralNet
 	int handleDendriticBulge(Neuron *n, float bulge);
 	cv::Mat createConnectionDensityImage(int height, int width);
 	cv::Mat createCurrentActivityImage(int height, int width, TortoiseTime at_time, int fade_time = 1);
+	cv::Mat &createInputActivityImage(cv::Mat &image, TortoiseTime at_time, int fade_time = 1);
 };
 
 

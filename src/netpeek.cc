@@ -58,7 +58,6 @@ void print_help(char *argv)
 
 struct options parse_args(int argc, char **argv)
 {
-	struct options opts;
 	int c = 0;
 
 	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:rfF:p:")) != -1)
@@ -227,6 +226,7 @@ int main(int argc, char **argv)
 			sprintf(windowname, "layer #%d: firing neurons", n);
 			if (!opts.no_activity_image) {
 				activity_image = nets[n]->createCurrentActivityImage(DEFAULT_NET_WIDTH, DEFAULT_NET_HEIGHT, at_time, opts.fade_time);
+//				nets[n]->createInputActivityImage(activity_image, at_time, opts.fade_time);
 				imshow(windowname, activity_image);
 			}
 
