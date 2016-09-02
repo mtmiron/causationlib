@@ -12,7 +12,6 @@
 #include <math.h>
 #include "temporalnn.hh"
 
-#define NUMVCHANNELS 7
 #define REPOSITION_CURSOR_LAST_LINE std::cout << '\x08' << '\x0D' \
 << "                                                                      "\
 << '\x0D'
@@ -29,6 +28,9 @@
 "7: CAP_OPENNI_IR_IMAGE 	Data given from IR image generator",
 */
 static const char* visual_channel_map[] = {
+#ifdef BUILD_WITH_OPENNI
+#  define NUMVCHANNELS 7
+#  define EVENT_TRIGGER_PERCENT 0.10
 	"CAP_OPENNI_DEPTH_MAP        ",
 	"CAP_OPENNI_POINT_CLOUD_MAP  ",
 	"CAP_OPENNI_DISPARITY_MAP    ",
@@ -37,13 +39,22 @@ static const char* visual_channel_map[] = {
 	"CAP_OPENNI_BGR_IMAGE        ",
 	"CAP_OPENNI_GRAY_IMAGE       ",
 	"CAP_OPENNI_IR_IMAGE         ",
+#else
+#  define NUMVCHANNELS 1
+#  define EVENT_TRIGGER_PERCENT 0.03
+	"MISC_VIDEO_CHANNEL          ",
+#endif
 };
 
 /*
  * Channels to do actual processing on
  */
 static const int processed_visual_channels[] = {
+#ifdef BUILD_WITH_OPENNI
 	5, 6,
+#else
+	0,
+#endif
 };
 
 /*
@@ -61,16 +72,7 @@ static struct options {
  */
 void visual_processing(cv::Mat &frame)
 {
-	/*
-	cv::Point midpoint(frame.cols / 2.0, frame.rows / 2.0);
-	cv::circle(frame, midpoint, (frame.cols + frame.rows) / 8, cv::Scalar(255,255,255));
-	*/
-	/*
-	for (int r = 1; r < frame.rows; r += 2)
-		for (int c = 1; c < frame.cols; c += 2)
-			if ( *(frame.ptr(r-1) + c * frame.elemSize()) < *(frame.ptr(r+1) + c * frame.elemSize()) )
-				frame(cv::Range(r - 1, r + 1), cv::Range(c - 1, c + 1)) = *(frame.ptr(r) + c * frame.elemSize());
-	*/
+
 }
 
 
@@ -81,18 +83,25 @@ void visual_processing(cv::Mat &frame)
  * An image frame is a matrix, each element corresponding to an
  * intensity value at that pixel.  The norm of a matrix is
  * the equivalent of the magnitude of that matrix; thus,
- * the norm of an image frame is the equivalent of the intensity
- * of the pixels.
+ * the norm of an image frame is a number representing the
+ * intensity of the pixels.
  *
  * With a Kinect making depth/IR values available, this works
  * surprisingly well for almost no computational cost.
+ *
+ * Since a "visual event," is primarily meant to trigger
+ * re-evaluation of a scene, false positives are acceptable.
  */
 int visual_iter(struct timespec &event)
 {
+#ifdef BUILD_WITH_OPENNI
 	static cv::VideoCapture cam(cv::CAP_OPENNI);
+#else
+	static cv::VideoCapture cam(0);
+#endif
 	static std::vector<cv::Mat> vidFrame(NUMVCHANNELS);
 	static std::vector<float> old_norm(NUMVCHANNELS), cur_norm(NUMVCHANNELS), delta(NUMVCHANNELS);
-	int event_took_place = false;
+	int event_took_place = -1;
 
 	if (!cam.isOpened())
 	{
@@ -117,7 +126,7 @@ int visual_iter(struct timespec &event)
 	// Track any sudden changes in our entire field of vision (from last call to this one)
 	for (uint i = 0; i < vidFrame.size(); i++) {
 		old_norm[i] = cur_norm[i];
-		if ( (cur_norm[i] * 0.10) <= delta[i] ) {
+		if ( (cur_norm[i] * EVENT_TRIGGER_PERCENT) <= delta[i] ) {
 			event_took_place = i;
 			clock_gettime(CLOCK_REALTIME, &event);
 		}
@@ -140,11 +149,11 @@ int visual_iter(struct timespec &event)
 
 void print_help(char **argv)
 {
-	printf("Usage: %s [opts]\n\n\tOptions are:\n\
-\t\t-h\tThis help\n\
-\t\t-s\tShow images\n\
-\t\t-n\tShow norm of image frame matrixes\n\
-", *argv);
+	printf("Usage: %s [opts]\n\n\tOptions are:\n"
+		"\t\t-h\tThis help\n"
+		"\t\t-s\tShow images\n"
+		"\t\t-n\tShow norm of image frame matrixes\n",
+		*argv);
 	exit(0);
 }
 
@@ -188,7 +197,7 @@ int main(int argc, char **argv)
 
 	while (true)
 	{
-		if ( (visual_event_on_channel = visual_iter(event_times[0])) ) {
+		if ( (visual_event_on_channel = visual_iter(event_times[0])) != -1) {
 			std::cout << "visual event on channel " << visual_event_on_channel
 				<< " at " << event_times[0].tv_sec << "." << event_times[0].tv_nsec << std::endl;
 			if (options.show_visual_norms) {
