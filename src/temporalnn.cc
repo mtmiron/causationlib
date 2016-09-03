@@ -1,6 +1,21 @@
 #include "temporalnn.hh"
 #include <iostream>
 
+/*
+ * Current design requirements (to maintain nnvisualizer.cc parameters) are as
+ * follows (the result of these two leave /input_time/ and /firetime/ equal
+ * if sub-threshold input triggered the action potential, and different if
+ * a single input strong enough to trigger the neuron to fire was received.)
+ *
+ *
+ *  - /input_time/ must be set ONLY when sub-action-potential input is received
+ *
+ *  - /firetime/ must ALWAYS be set when an action potential (firing) is triggered
+ *
+ *
+ */
+
+
 #define BIND(T) bind(&T::bound_input, this, input_v, at_time)
 
 using namespace std;
@@ -14,11 +29,13 @@ BrainCell::BrainCell(Neuron *n)
 	neuron = n;
 }
 
+
 Neuron *BrainCell::setNeuron(Neuron *owner)
 {
 	neuron = owner;
 	return neuron;
 }
+
 
 NeuralNet *BrainCell::setNet(NeuralNet *owner)
 {
@@ -35,6 +52,7 @@ Dendrite::Dendrite(Neuron *n) : BrainCell(n)
 	this->neuron = n;
 }
 
+
 #ifdef BUILD_WITH_TIMEQUEUE
 int Dendrite::bound_input(short input_v, TortoiseTime at_time)
 #else
@@ -44,6 +62,7 @@ int Dendrite::input(short input_v, TortoiseTime at_time)
 	return neuron->input(input_v, at_time);
 }
 
+
 #ifdef BUILD_WITH_TIMEQUEUE
 int Dendrite::input(short input_v, TortoiseTime at_time)
 {
@@ -51,6 +70,7 @@ int Dendrite::input(short input_v, TortoiseTime at_time)
 	return 0;
 }
 #endif
+
 
 int Dendrite::grow()
 {
@@ -73,20 +93,24 @@ Axon::Axon(Neuron *n) : BrainCell(n)
 {
 }
 
+
 int Axon::numberOfConnections()
 {
 	return d_output.size() + n_output.size();
 }
+
 
 void Axon::addDendriteOutput(Dendrite *d)
 {
 	d_output.insert(d);
 }
 
+
 void Axon::addNeuronOutput(Neuron *n)
 {
 	n_output.insert(n);
 }
+
 
 #ifdef BUILD_WITH_TIMEQUEUE
 int Axon::bound_input(short input_v, TortoiseTime at_time)
@@ -109,6 +133,7 @@ int Axon::input(short input_v, TortoiseTime at_time)
 	return dist_voltage;
 }
 
+
 #ifdef BUILD_WITH_TIMEQUEUE
 int Axon::input(short input_v, TortoiseTime at_time)
 {
@@ -116,6 +141,7 @@ int Axon::input(short input_v, TortoiseTime at_time)
 	return 0;
 }
 #endif
+
 
 /*
  * class Neuron
@@ -125,6 +151,7 @@ Neuron::Neuron() : BrainCell(this), axon(this)
 	dendrites.resize(1, Dendrite(this));
 }
 
+
 Neuron *Neuron::setupDendrites()
 {
 	for (uint i = 0; i < dendrites.size(); i++)
@@ -132,15 +159,18 @@ Neuron *Neuron::setupDendrites()
 	return this;
 }
 
+
 Neuron *Neuron::setupAxon()
 {
 	return axon.setNeuron(this);
 }
 
+
 int Neuron::numberOfConnections()
 {
 	return axon.numberOfConnections();
 }
+
 
 #ifdef BUILD_WITH_TIMEQUEUE
 int Neuron::bound_input(short input_v, TortoiseTime at_time)
@@ -175,6 +205,7 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 	return 0;
 }
 
+
 #ifdef BUILD_WITH_TIMEQUEUE
 int Neuron::input(short input_v, TortoiseTime at_time)
 {
@@ -182,6 +213,7 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 	return 0;
 }
 #endif
+
 
 int Neuron::fire()
 {
@@ -191,15 +223,18 @@ int Neuron::fire()
 	return input(abs(voltage - action_v), time);
 }
 
+
 void Neuron::addDendriteOutput(Neuron *n)
 {
 	axon.addDendriteOutput(&n->dendrites[0]);
 }
 
+
 void Neuron::addNeuronOutput(Neuron *n)
 {
 	axon.addNeuronOutput(n);
 }
+
 
 void Neuron::setPropagationTime(int prop)
 {
@@ -209,6 +244,7 @@ void Neuron::setPropagationTime(int prop)
 		dendrites[i].propagation_time = prop;
 }
 
+
 void Neuron::setMaxDendriteConnections(unsigned int max)
 {
 	this->max_dendrite_bulge = max;
@@ -217,12 +253,14 @@ void Neuron::setMaxDendriteConnections(unsigned int max)
 		dendrites[i].max_dendrite_bulge = max;
 }
 
+
 ostream &operator<<(ostream &os, Neuron &neuron)
 {
 	os << "Neuron: (" << neuron.x << "," << neuron.y << ")\t"
 		<< "firetime: " << neuron.firetime << "\t" << endl;
 	return os;
 }
+
 
 /*
  * class NeuralNet
@@ -243,6 +281,7 @@ NeuralNet::NeuralNet(int x, int y)
 		}
 }
 
+
 int NeuralNet::handleDendriticBulge(Neuron *n, float bulge)
 {
 	uint xpos = (uint)n->x;
@@ -261,6 +300,7 @@ int NeuralNet::handleDendriticBulge(Neuron *n, float bulge)
 	return n->numberOfConnections();
 }
 
+
 Neuron &NeuralNet::getFromWindowPosition(int Px, int Py, int Wx, int Wy)
 {
 	int x = round(Px / ((float)Wx / dim_x));
@@ -271,6 +311,7 @@ Neuron &NeuralNet::getFromWindowPosition(int Px, int Py, int Wx, int Wy)
 	else
 		throw NeuralNetException();
 }
+
 
 void NeuralNet::connectTo(NeuralNet *net)
 {
