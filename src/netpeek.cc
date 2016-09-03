@@ -67,8 +67,8 @@ void print_status()
 {
 	fprintf(stdout, "Neuron input strength: %dmV  Neuron step size: %d  Net height: %d  Net width: %d  "
 			"Firing wave loop time: %dms  Net layers: %d  Fade time: %d  Propagation time: %dms  "
-			"Max dendrite bulge: %d\n"
-			"Images are updated every %dms\n\n"
+			"Max dendrite bulge: %d\n\n"
+			"Images are updated once per firing wave (%dms); red means firing, blue means sub-action-potential stimulation\n\n"
 
 			"Keymap:\n"
 			"ESC - exit\n"
