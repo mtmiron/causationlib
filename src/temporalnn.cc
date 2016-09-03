@@ -3,14 +3,14 @@
 
 /*
  * Current design requirements (to maintain nnvisualizer.cc parameters) are as
- * follows (the result of these two leave /input_time/ and /firetime/ equal
+ * follows (the result of these two leave /input_time/ and /fire_time/ equal
  * if sub-threshold input triggered the action potential, and different if
  * a single input strong enough to trigger the neuron to fire was received.)
  *
  *
  *  - /input_time/ must be set ONLY when sub-action-potential input is received
  *
- *  - /firetime/ must ALWAYS be set when an action potential (firing) is triggered
+ *  - /fire_time/ must ALWAYS be set when an action potential (firing) is triggered
  *
  *
  */
@@ -178,7 +178,7 @@ int Neuron::bound_input(short input_v, TortoiseTime at_time)
 int Neuron::input(short input_v, TortoiseTime at_time)
 #endif
 {
-	TortoiseTime time_delta(at_time - firetime);
+	TortoiseTime time_delta(at_time - fire_time);
 
 	if (time_delta <= refractory_time) {
 		for (uint i = 0; i < dendrites.size(); i++)
@@ -187,7 +187,7 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 	}
 
 	if (input_v + resting_v >= action_v) {
-		firetime = at_time;
+		fire_time = at_time;
 		voltage = resting_v;
 		return axon.input(fire_v, at_time);
 	} else if (at_time - input_time > excited_time) {
@@ -197,7 +197,7 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 	input_time = at_time;
 	voltage += input_v;
 	if ( voltage >= action_v ) {
-		firetime = at_time;
+		fire_time = at_time;
 		voltage = resting_v;
 		return axon.input(fire_v, at_time);
 	}
@@ -245,6 +245,12 @@ void Neuron::setPropagationTime(int prop)
 }
 
 
+void Neuron::setExcitedTime(unsigned short time)
+{
+	this->excited_time = time;
+}
+
+
 void Neuron::setMaxDendriteConnections(unsigned int max)
 {
 	this->max_dendrite_bulge = max;
@@ -257,7 +263,7 @@ void Neuron::setMaxDendriteConnections(unsigned int max)
 ostream &operator<<(ostream &os, Neuron &neuron)
 {
 	os << "Neuron: (" << neuron.x << "," << neuron.y << ")\t"
-		<< "firetime: " << neuron.firetime << "\t" << endl;
+		<< "fire_time: " << neuron.fire_time << "\t" << endl;
 	return os;
 }
 

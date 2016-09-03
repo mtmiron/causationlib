@@ -28,15 +28,16 @@ static inline unsigned char get_faded_color(int fade_time, TortoiseTime &time_de
 	return 255 - diff;
 }
 
+
 Mat NeuralNet::createConnectionDensityImage(int width, int height)
 {
 	Mat image(height, width, CV_8UC3, Vec3b(0,0,0));
+	uchar c = 20;
 	int x = this->dim_x;
 	int y = this->dim_y;
 	int nconns = 0;
 	float x_pos = 0;
 	float y_pos = 0;
-	uchar c = 20;//255 / neurons[0][0].max_dendrite_bulge;
 	Vec3b color(c,0,c);
 
 	x_pos = ((float)width / x);
@@ -53,6 +54,7 @@ Mat NeuralNet::createConnectionDensityImage(int width, int height)
 
 	return image;
 }
+
 
 Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at_time, int fade_time)
 {
@@ -74,7 +76,7 @@ Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at
 	for (int i = 0; i < x; i++)
 		for (int j = 0; j < y; j++)
 		{
-			time_delta = at_time - this->neurons[i][j].firetime;
+			time_delta = at_time - this->neurons[i][j].fire_time;
 			// Don't draw neurons with future firing times, or longer than fade_time ago
 			if (time_delta > oldest || time_delta < 0)
 				fire_c = 0;
@@ -87,7 +89,7 @@ Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at
 			else
 				input_c = get_faded_color(fade_time, time_delta);
 
-			if (this->neurons[i][j].firetime == this->neurons[i][j].input_time)
+			if (this->neurons[i][j].fire_time == this->neurons[i][j].input_time)
 				color = Vec3b(0, fire_c, 0);
 			else
 				color = Vec3b(input_c, 0, fire_c);
@@ -98,6 +100,7 @@ Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at
 
 	return image;
 }
+
 
 Mat &NeuralNet::createInputActivityImage(Mat &image, TortoiseTime at_time, int fade_time)
 {

@@ -23,7 +23,7 @@ class BrainCell
 	unsigned int max_dendrite_bulge = 50;
 
   public:
-	TortoiseTime firetime;
+	TortoiseTime fire_time;
 	static bool freeze_connections;
 	static TimeQueue event_queue;
 	Neuron *neuron;
@@ -37,6 +37,7 @@ class BrainCell
 	virtual int bound_input(short input_v, TortoiseTime at_time) = 0;
 #endif
 };
+
 
 class Dendrite : public BrainCell
 {
@@ -85,7 +86,7 @@ class Neuron : public BrainCell
   private:
   	// In milliseconds
 	unsigned short refractory_time = 50;
-	unsigned short excited_time = 10;
+	unsigned short excited_time = 100;
 	short refractory_v = -50;
 	short voltage = -80;
 	short resting_v = -80;
@@ -107,14 +108,17 @@ class Neuron : public BrainCell
 	Neuron *setupAxon();
 	int numberOfConnections();
 	int input(short input_v, TortoiseTime at_time);
-#ifdef BUILD_WITH_TIMEQUEUE
-	int bound_input(short input_v, TortoiseTime at_time);
-#endif
 	int fire();
 	void setPropagationTime(int prop);
 	void setMaxDendriteConnections(unsigned int max);
+	void setExcitedTime(unsigned short time);
+
 	friend ostream &operator<<(ostream &os, Neuron &neuron);
+#ifdef BUILD_WITH_TIMEQUEUE
+	int bound_input(short input_v, TortoiseTime at_time);
+#endif
 };
+
 
 class NeuralNetException : exception
 {
@@ -123,6 +127,7 @@ class NeuralNetException : exception
 		return "bad parameters";
 	}
 };
+
 
 class NeuralNet
 {
