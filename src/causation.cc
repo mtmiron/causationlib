@@ -1,9 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/videoio.hpp>
-#include <cstdio>
 #include <iostream>
 #include <sys/resource.h>
-#include <string.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <vector>
