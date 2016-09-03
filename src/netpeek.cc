@@ -14,6 +14,7 @@
 #define DEFAULT_PROPAGATION_TIME 1
 #define DEFAULT_MAX_DENDRITE_BULGE 50
 #define DEFAULT_RANDOM_FIRING true
+#define DEFAULT_EXCITED_TIME 100
 
 using namespace std;
 using namespace cv;
@@ -29,7 +30,9 @@ struct options {
 	int fade_time = DEFAULT_FADE_TIME;
 	int propagation_time = DEFAULT_PROPAGATION_TIME;
 	int max_dendrite_bulge = DEFAULT_MAX_DENDRITE_BULGE;
+	int excited_time = DEFAULT_EXCITED_TIME;
 	bool random_step = DEFAULT_RANDOM_FIRING;
+	bool input_enabled = true;
 	bool freeze_connections = false;
 	bool no_density_image = false;
 	bool no_activity_image = false;
@@ -47,10 +50,10 @@ void print_help(char *argv)
 		"\t\t-h\tThis help\n"
 		"\t\t-d\tDon't draw neural connection density image\n"
 		"\t\t-a\tDon't draw neural activity image\n"
-		"\t\t-r\tRandom step size for neuron\n"
-		"\t\t-f\tDon't self assemble neurons (freeze state)\n"
+		"\t\t-r\tRandom step size for neuron input loop\n"
+		"\t\t-F\tDon't self assemble neurons (freeze state)\n"
 		"\t\t-p\tPropagation time (time from neuron firing to hitting next neuron)\n"
-		"\t\t-F ARG\tFade time for activity image\n"
+		"\t\t-f ARG\tFade time for activity image\n"
 		"\t\t-s ARG\tStep size for neuron input loop\n"
 		"\t\t-x ARG\tWidth of neural net\n"
 		"\t\t-y ARG\tHeight of neural net\n"
@@ -58,6 +61,7 @@ void print_help(char *argv)
 		"\t\t-t ARG\tSet the wait time between wave-input iterations\n"
 		"\t\t-l ARG\tNumber of neural nets\n"
 		"\t\t-m ARG\tMax dendritic bulge (directly related to max connections)\n"
+		"\t\t-e ARG\tSet excited_time ('concurrent' input within this time will sum)\n"
 		"\n", argv);
 	exit(0);
 }
@@ -65,10 +69,10 @@ void print_help(char *argv)
 
 void print_status()
 {
-	fprintf(stdout, "Neuron input strength: %dmV  Neuron step size: %d  Net height: %d  Net width: %d  "
+	fprintf(stdout, "Input strength: %dmV  Step size: %d  Net height: %d  Net width: %d  "
 			"Firing wave loop time: %dms  Net layers: %d  Fade time: %d  Propagation time: %dms  "
-			"Max dendrite bulge: %d\n\n"
-			"Images are updated once per firing wave (%dms); red means firing, blue means sub-action-potential stimulation\n\n"
+			"Max dendrite bulge: %d  Excited duration: %dms\n\n"
+			"Images are updated once per firing wave (%dms); red means firing, blue means sub-action-potential stimulation, green is firing triggered by concurrent weak stimulation\n\n"
 
 			"Keymap:\n"
 			"ESC - exit\n"
@@ -77,6 +81,7 @@ void print_status()
 			"'r' - toggle random firing\n"
 			"'d' - toggle updating of connection densities window(s)\n"
 			"'a' - toggle updating of firing neurons window(s)\n"
+			"'i' - toggle input loop\n"
 			"'c' - clear the event queue\n"
 			"'f' - freeze connections\n"
 			"'-' - decrease step size\n"
@@ -88,7 +93,7 @@ void print_status()
 
 			opts.input_strength, opts.stepsize, opts.height, opts.width,
 			opts.loop_time, opts.layers, opts.fade_time, opts.propagation_time,
-			opts.max_dendrite_bulge, opts.loop_time);
+			opts.max_dendrite_bulge, opts.excited_time, opts.loop_time);
 }
 
 
@@ -96,7 +101,7 @@ struct options parse_args(int argc, char **argv)
 {
 	int c = 0;
 
-	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:rfF:p:m:")) != -1)
+	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:rfF:p:m:e:")) != -1)
 	{
 		switch (c) {
 		case 's':
@@ -129,14 +134,17 @@ struct options parse_args(int argc, char **argv)
 		case 'p':
 			opts.propagation_time = atoi(optarg);
 			break;
-		case 'F':
-			opts.fade_time = atoi(optarg);
 		case 'f':
+			opts.fade_time = atoi(optarg);
+		case 'F':
 			opts.freeze_connections = true;
 			BrainCell::freeze_connections = true;
 			break;
 		case 'm':
 			opts.max_dendrite_bulge = atoi(optarg);
+			break;
+		case 'e':
+			opts.excited_time = atoi(optarg);
 			break;
 		case 'h':
 		case '?':
@@ -177,6 +185,9 @@ void handle_keypress(uchar key)
 		break;
 	case 'h':
 		print_status();
+		break;
+	case 'i':
+		opts.input_enabled = !opts.input_enabled;
 		break;
 	case '-':
 	case '_':
@@ -305,6 +316,7 @@ int main(int argc, char **argv)
 			{
 				nets[i]->neurons[x][y].setPropagationTime(opts.propagation_time);
 				nets[i]->neurons[x][y].setMaxDendriteConnections(opts.max_dendrite_bulge);
+				nets[i]->neurons[x][y].setExcitedTime(opts.excited_time);
 			}
 	}
 
@@ -318,10 +330,12 @@ int main(int argc, char **argv)
 		clock_gettime(CLOCK_REALTIME, &at_time);
 		last_loop_time = at_time;
 
-		if (opts.random_step)
-			random_step(nets, at_time);
-		else
-			interval_step(nets, at_time);
+		if (opts.input_enabled) {
+			if (opts.random_step)
+				random_step(nets, at_time);
+			else
+				interval_step(nets, at_time);
+		}
 
 #ifdef BUILD_WITH_TIMEQUEUE
 		BrainCell::event_queue.applyAllUpto(at_time);
