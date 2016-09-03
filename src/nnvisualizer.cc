@@ -28,15 +28,16 @@ static inline unsigned char get_faded_color(int fade_time, TortoiseTime &time_de
 	return 255 - diff;
 }
 
-Mat NeuralNet::createConnectionDensityImage(int height, int width)
+Mat NeuralNet::createConnectionDensityImage(int width, int height)
 {
-	Mat image(width, height, CV_8UC3, Vec3b(0,0,0));
-	Vec3b color(5,0,5);
-	int x = this->neurons.size();
-	int y = this->neurons[0].size();
+	Mat image(height, width, CV_8UC3, Vec3b(0,0,0));
+	int x = this->dim_x;
+	int y = this->dim_y;
 	int nconns = 0;
 	float x_pos = 0;
 	float y_pos = 0;
+	uchar c = 20;//255 / neurons[0][0].max_dendrite_bulge;
+	Vec3b color(c,0,c);
 
 	x_pos = ((float)width / x);
 	y_pos = ((float)height / y);
@@ -47,19 +48,19 @@ Mat NeuralNet::createConnectionDensityImage(int height, int width)
 			nconns = this->neurons[i][j].numberOfConnections();
 			if (nconns == 0)
 				continue;
-			image.at<Vec3b>( PIXEL_X(i, x_pos), PIXEL_Y(j, y_pos) ) = color * nconns;
+			image.at<Vec3b>( PIXEL_Y(j, y_pos), PIXEL_X(i, x_pos) ) = color * nconns;
 		}
 
 	return image;
 }
 
-Mat NeuralNet::createCurrentActivityImage(int height, int width, TortoiseTime at_time, int fade_time)
+Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at_time, int fade_time)
 {
-	Mat image(width, height, CV_8UC3, Vec3b(0,0,0));
+	Mat image(height, width, CV_8UC3, Vec3b(0,0,0));
 	Vec3b pixel(0,0,0);
 	Vec3b color(0,0,0);
-	int x = this->neurons.size();
-	int y = this->neurons[0].size();
+	int x = this->dim_x;
+	int y = this->dim_y;
 	float x_pos = 0;
 	float y_pos = 0;
 	TortoiseTime time_delta;
@@ -77,9 +78,9 @@ Mat NeuralNet::createCurrentActivityImage(int height, int width, TortoiseTime at
 				continue;
 
 			color = Vec3b(0,0,get_faded_color(fade_time, time_delta));
-			pixel = image.at<Vec3b>( PIXEL_X(i, x_pos), PIXEL_Y(j, y_pos) );
+			pixel = image.at<Vec3b>( PIXEL_Y(j, y_pos), PIXEL_X(i, x_pos) );
 			if (pixel[2] == 0)
-				image.at<Vec3b>( PIXEL_X(i, x_pos), PIXEL_Y(j, y_pos) ) = color;
+				image.at<Vec3b>( PIXEL_Y(j, y_pos), PIXEL_X(i, x_pos) ) = color;
 
 			DEBUG_OUTPUT;
 		}
@@ -91,8 +92,8 @@ Mat &NeuralNet::createInputActivityImage(Mat &image, TortoiseTime at_time, int f
 {
 	Vec3b pixel(0,0,0);
 	Vec3b color(0,0,0);
-	int x = this->neurons.size();
-	int y = this->neurons[0].size();
+	int x = this->dim_x;
+	int y = this->dim_y;
 	float x_pos = 0;
 	float y_pos = 0;
 	TortoiseTime time_delta;
