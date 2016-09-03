@@ -187,8 +187,9 @@ int main(int argc, char **argv)
 	parse_args(argc, argv);
 
 	pid = getpid();
-	if (setpriority(PRIO_PROCESS, pid, 20) == -1 && errno != 0)
-		throw strerror(errno);
+	if (setpriority(PRIO_PROCESS, pid, 20) == -1 && errno != 0) {
+		std::cerr << strerror(errno) << endl;
+	}
 
 	std::cout.setf(std::ios::fixed, std::ios::floatfield);
 	std::cout.precision(5);
