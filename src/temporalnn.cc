@@ -263,8 +263,8 @@ int NeuralNet::handleDendriticBulge(Neuron *n, float bulge)
 
 Neuron &NeuralNet::getFromWindowPosition(int Px, int Py, int Wx, int Wy)
 {
-	int x = Px / (Wx / dim_x);
-	int y = Py / (Wy / dim_y);
+	int x = round(Px / ((float)Wx / dim_x));
+	int y = round(Py / ((float)Wy / dim_y));
 
 	if (x >= 0 && x < this->dim_x && y >= 0 && y < this->dim_y)
 		return neurons[x][y];
