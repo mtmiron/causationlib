@@ -13,6 +13,7 @@
 #define DEFAULT_FADE_TIME 1
 #define DEFAULT_PROPAGATION_TIME 1
 #define DEFAULT_MAX_DENDRITE_BULGE 50
+#define DEFAULT_RANDOM_FIRING true
 
 using namespace std;
 using namespace cv;
@@ -28,7 +29,7 @@ struct options {
 	int fade_time = DEFAULT_FADE_TIME;
 	int propagation_time = DEFAULT_PROPAGATION_TIME;
 	int max_dendrite_bulge = DEFAULT_MAX_DENDRITE_BULGE;
-	bool random_step = false;
+	bool random_step = DEFAULT_RANDOM_FIRING;
 	bool freeze_connections = false;
 	bool no_density_image = false;
 	bool no_activity_image = false;
