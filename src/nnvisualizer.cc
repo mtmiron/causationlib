@@ -91,9 +91,7 @@ Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at
 				color = Vec3b(0, 0, fire_c);
 			else
 				color = Vec3b(input_c, 0, fire_c);
-			pixel = image.at<Vec3b>( PIXEL_Y(j, y_pos), PIXEL_X(i, x_pos) );
-			if (pixel[2] == 0)
-				image.at<Vec3b>( PIXEL_Y(j, y_pos), PIXEL_X(i, x_pos) ) = color;
+			image.at<Vec3b>( PIXEL_Y(j, y_pos), PIXEL_X(i, x_pos) ) = color;
 
 			DEBUG_OUTPUT;
 		}
