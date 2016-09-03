@@ -260,7 +260,6 @@ Neuron &NeuralNet::getFromWindowPosition(int Px, int Py, int Wx, int Wy)
 	int x = Px / (Wx / dim_x);
 	int y = Py / (Wy / dim_y);
 
-//	cout << "(" << Px << "," << Py << ")" << " --> " << "(" << x << "," << y << ")" << endl;
 	if (x >= 0 && x < this->dim_x && y >= 0 && y < this->dim_y)
 		return neurons[x][y];
 	else
