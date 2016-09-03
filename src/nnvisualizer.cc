@@ -63,6 +63,8 @@ Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at
 	int y = this->dim_y;
 	float x_pos = 0;
 	float y_pos = 0;
+	uchar fire_c = 0;
+	uchar input_c = 0;
 	TortoiseTime time_delta;
 	struct timespec oldest = { fade_time, 0 };
 
@@ -75,9 +77,20 @@ Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at
 			time_delta = at_time - this->neurons[i][j].firetime;
 			// Don't draw neurons with future firing times, or longer than fade_time ago
 			if (time_delta > oldest || time_delta < 0)
-				continue;
+				fire_c = 0;
+			else
+				fire_c = get_faded_color(fade_time, time_delta);
 
-			color = Vec3b(0,0,get_faded_color(fade_time, time_delta));
+			time_delta = at_time - this->neurons[i][j].input_time;
+			if (time_delta > oldest || time_delta < 0)
+				input_c = 0;
+			else
+				input_c = get_faded_color(fade_time, time_delta);
+
+			if (input_c == fire_c)
+				color = Vec3b(0, 0, fire_c);
+			else
+				color = Vec3b(input_c, 0, fire_c);
 			pixel = image.at<Vec3b>( PIXEL_Y(j, y_pos), PIXEL_X(i, x_pos) );
 			if (pixel[2] == 0)
 				image.at<Vec3b>( PIXEL_Y(j, y_pos), PIXEL_X(i, x_pos) ) = color;
