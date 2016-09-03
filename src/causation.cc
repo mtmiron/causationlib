@@ -152,7 +152,7 @@ void print_help(char **argv)
 	printf("Usage: %s [opts]\n\n\tOptions are:\n"
 		"\t\t-h\tThis help\n"
 		"\t\t-s\tShow images\n"
-		"\t\t-n\tShow norm of image frame matrixes\n",
+		"\t\t-n\tShow norm of image frame matrices\n",
 		*argv);
 	exit(0);
 }
@@ -194,7 +194,7 @@ int main(int argc, char **argv)
 	std::cout.setf(std::ios::fixed, std::ios::floatfield);
 	std::cout.precision(5);
 	if (options.show_visual_norms)
-		std::cout << "Norm of image matrixes: " << std::endl << std::endl;
+		std::cout << "Norm of image matrices: " << std::endl << std::endl;
 
 	while (true)
 	{
