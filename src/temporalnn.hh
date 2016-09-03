@@ -126,7 +126,7 @@ class NeuralNetException : exception
 
 class NeuralNet
 {
-  private:
+  protected:
 	int dim_x = 0;
 	int dim_y = 0;
 	int dim_z = 0;
@@ -135,12 +135,12 @@ class NeuralNet
 	vector< vector<Neuron> > neurons;
 
 	NeuralNet(int x = 100, int y = 100);
-	void connectTo(NeuralNet *net);
-	int handleDendriticBulge(Neuron *n, float bulge);
-	cv::Mat createConnectionDensityImage(int width, int height);
-	cv::Mat createCurrentActivityImage(int width, int height, TortoiseTime at_time, int fade_time = 1);
-	cv::Mat &createInputActivityImage(cv::Mat &image, TortoiseTime at_time, int fade_time = 1);
-	Neuron &getFromWindowPosition(int Px, int Py, int Wx, int Wy);
+	virtual void connectTo(NeuralNet *net);
+	virtual int handleDendriticBulge(Neuron *n, float bulge);
+	virtual cv::Mat createConnectionDensityImage(int width, int height);
+	virtual cv::Mat createCurrentActivityImage(int width, int height, TortoiseTime at_time, int fade_time = 1);
+	virtual cv::Mat &createInputActivityImage(cv::Mat &image, TortoiseTime at_time, int fade_time = 1);
+	virtual Neuron &getFromWindowPosition(int Px, int Py, int Wx, int Wy);
 };
 
 
