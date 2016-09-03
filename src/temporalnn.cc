@@ -1,4 +1,5 @@
 #include "temporalnn.hh"
+#include <iostream>
 
 #define BIND(T) bind(&T::bound_input, this, input_v, at_time)
 
@@ -56,8 +57,12 @@ int Dendrite::grow()
 	if (freeze_connections)
 		return -1;
 
-	bulge += 1 * seekfactor;
-	return this->neuron->net->handleDendriticBulge(this->neuron, bulge);
+	if (bulge < max_dendrite_bulge) {
+		bulge += 1 * seekfactor;
+		return this->neuron->net->handleDendriticBulge(this->neuron, bulge);
+	}
+	else
+		return -1;
 }
 
 
@@ -198,12 +203,28 @@ void Neuron::setPropagationTime(int prop)
 		dendrites[i].propagation_time = prop;
 }
 
+void Neuron::setMaxDendriteConnections(unsigned int max)
+{
+	this->max_dendrite_bulge = max;
+	axon.max_dendrite_bulge = max;
+	for (uint i = 0; i < dendrites.size(); i++)
+		dendrites[i].max_dendrite_bulge = max;
+}
+
+ostream &operator<<(ostream &os, Neuron &neuron)
+{
+	os << "Neuron: (" << neuron.x << "," << neuron.y << ")\t"
+		<< "firetime: " << neuron.firetime << "\t" << endl;
+	return os;
+}
 
 /*
  * class NeuralNet
  */
 NeuralNet::NeuralNet(int x, int y)
 {
+	dim_x = x;
+	dim_y = y;
 	neurons.resize(x, vector<Neuron>(y, Neuron()));
 	for (int i = 0; i < x; i++)
 		for (int j = 0; j < y; j++)
@@ -222,6 +243,9 @@ int NeuralNet::handleDendriticBulge(Neuron *n, float bulge)
 	uint ypos = (uint)n->y;
 	int scale = round(bulge);
 
+	if (scale >= dim_x && scale >= dim_y)
+		return n->numberOfConnections();
+
 	for (int i = 0; i <= scale; i++)
 		for (int j = 0; j <= scale; j++)
 			if (xpos + i < neurons.size() && ypos + j < neurons[xpos + i].size())
@@ -229,6 +253,18 @@ int NeuralNet::handleDendriticBulge(Neuron *n, float bulge)
 					neurons[xpos + i][ypos + j].addDendriteOutput(n);
 
 	return n->numberOfConnections();
+}
+
+Neuron &NeuralNet::getFromWindowPosition(int Px, int Py, int Wx, int Wy)
+{
+	int x = Px / (Wx / dim_x);
+	int y = Py / (Wy / dim_y);
+
+//	cout << "(" << Px << "," << Py << ")" << " --> " << "(" << x << "," << y << ")" << endl;
+	if (x >= 0 && x < this->dim_x && y >= 0 && y < this->dim_y)
+		return neurons[x][y];
+	else
+		throw NeuralNetException();
 }
 
 void NeuralNet::connectTo(NeuralNet *net)

@@ -18,11 +18,12 @@ class NeuralNet;
 class BrainCell
 {
   protected:
-	TortoiseTime firetime;
 	TortoiseTime input_time;
 	unsigned short propagation_time = 1;
+	unsigned int max_dendrite_bulge = 50;
 
   public:
+	TortoiseTime firetime;
 	static bool freeze_connections;
 	static TimeQueue event_queue;
 	Neuron *neuron;
@@ -90,10 +91,10 @@ class Neuron : public BrainCell
 	short resting_v = -80;
 	short action_v = -30;
 	short fire_v = 50;
-	int x = 0;
-	int y = 0;
 
   protected:
+	int x = 0;
+	int y = 0;
 	Axon axon;
 	vector<Dendrite> dendrites;
 
@@ -111,19 +112,35 @@ class Neuron : public BrainCell
 #endif
 	int fire();
 	void setPropagationTime(int prop);
+	void setMaxDendriteConnections(unsigned int max);
+	friend ostream &operator<<(ostream &os, Neuron &neuron);
+};
+
+class NeuralNetException : exception
+{
+	virtual const char *what() const throw()
+	{
+		return "bad parameters";
+	}
 };
 
 class NeuralNet
 {
+  private:
+	int dim_x = 0;
+	int dim_y = 0;
+	int dim_z = 0;
+
   public:
 	vector< vector<Neuron> > neurons;
 
-	explicit NeuralNet(int x = 100, int y = 100);
+	NeuralNet(int x = 100, int y = 100);
 	void connectTo(NeuralNet *net);
 	int handleDendriticBulge(Neuron *n, float bulge);
-	cv::Mat createConnectionDensityImage(int height, int width);
-	cv::Mat createCurrentActivityImage(int height, int width, TortoiseTime at_time, int fade_time = 1);
+	cv::Mat createConnectionDensityImage(int width, int height);
+	cv::Mat createCurrentActivityImage(int width, int height, TortoiseTime at_time, int fade_time = 1);
 	cv::Mat &createInputActivityImage(cv::Mat &image, TortoiseTime at_time, int fade_time = 1);
+	Neuron &getFromWindowPosition(int Px, int Py, int Wx, int Wy);
 };
 
 
