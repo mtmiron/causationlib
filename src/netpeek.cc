@@ -3,6 +3,7 @@
 #include "temporalnn.hh"
 #include <opencv2/highgui.hpp>
 #include <iostream>
+#include <thread>
 
 #define DEFAULT_STEP_SIZE 50
 #define DEFAULT_NET_HEIGHT 360
@@ -101,7 +102,7 @@ struct options parse_args(int argc, char **argv)
 {
 	int c = 0;
 
-	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:rfF:p:m:e:")) != -1)
+	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:rFf:p:m:e:")) != -1)
 	{
 		switch (c) {
 		case 's':
@@ -136,6 +137,7 @@ struct options parse_args(int argc, char **argv)
 			break;
 		case 'f':
 			opts.fade_time = atoi(optarg);
+			break;
 		case 'F':
 			opts.freeze_connections = true;
 			BrainCell::freeze_connections = true;
@@ -242,27 +244,23 @@ void density_window_mouse_callback(int event, int x, int y, int flags, void *use
 }
 
 
-void interval_step(vector<NeuralNet *> nets, TortoiseTime &at_time)
+void interval_step(vector<NeuralNet *> &nets, TortoiseTime at_time)
 {
-	NeuralNet *net = nets[0];
-
-	for (uint i = 0; i < net->neurons.size(); i += opts.stepsize)
-		for (uint j = 0; j < net->neurons[i].size(); j += opts.stepsize)
-			net->neurons[i][j].input(opts.input_strength, at_time);
+	for (uint i = 0; i < nets[0]->neurons.size(); i += opts.stepsize)
+		for (uint j = 0; j < nets[0]->neurons[i].size(); j += opts.stepsize)
+			nets[0]->neurons[i][j].input(opts.input_strength, at_time);
 }
 
 
-void random_step(vector<NeuralNet *> nets, TortoiseTime &at_time)
+void random_step(vector<NeuralNet *> &nets, TortoiseTime at_time)
 {
-	NeuralNet *net = nets[0];
-	
-	for (uint i = (random() % opts.stepsize); i < net->neurons.size(); i += (random() % opts.stepsize))
-		for (uint j = (random() % opts.stepsize); j < net->neurons[i].size(); j += (random() % opts.stepsize))
-			net->neurons[i][j].input(opts.input_strength, at_time);
+	for (uint i = (random() % opts.stepsize); i < nets[0]->neurons.size(); i += (random() % opts.stepsize))
+		for (uint j = (random() % opts.stepsize); j < nets[0]->neurons[i].size(); j += (random() % opts.stepsize))
+			nets[0]->neurons[i][j].input(opts.input_strength, at_time);
 }
 
 
-void activity_window_update(vector<NeuralNet *> nets, TortoiseTime &at_time)
+void activity_window_update(vector<NeuralNet *> &nets, TortoiseTime at_time)
 {
 	static char windowname[256] = { 0 };
 	static bool set_callback = true;
@@ -280,7 +278,7 @@ void activity_window_update(vector<NeuralNet *> nets, TortoiseTime &at_time)
 }
 
 
-void density_window_update(vector<NeuralNet *> nets, TortoiseTime &at_time)
+void density_window_update(vector<NeuralNet *> &nets, TortoiseTime at_time)
 {
 	static char windowname[256] = { 0 };
 	static bool set_callback = true;
@@ -341,13 +339,10 @@ int main(int argc, char **argv)
 		BrainCell::event_queue.applyAllUpto(at_time);
 #endif
 
-		for (uint n = 0; n < opts.layers; n++)
-		{
-			if (!opts.no_activity_image)
-				activity_window_update(nets, at_time);
-			if (!opts.no_density_image)
-				density_window_update(nets, at_time);
-		}
+		if (!opts.no_activity_image)
+			activity_window_update(nets, at_time);
+		if (!opts.no_density_image)
+			density_window_update(nets, at_time);
 	}
 
 	return 0;
