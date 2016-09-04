@@ -321,6 +321,10 @@ int main(int argc, char **argv)
 	for (uint i = 0; i < opts.layers - 1; i++)
 		nets[i]->connectTo(nets[i+1]);
 
+  try {
+	// out of memory buffer, so the catch() has some when it goes out of scope
+	char oom_buf[32 * 1024];
+
 	for (uchar key = 0; key != 27; key = waitKey(opts.loop_time))
 	{
 		handle_keypress(key);
@@ -345,5 +349,9 @@ int main(int argc, char **argv)
 			density_window_update(nets, at_time);
 	}
 
+  } catch (bad_alloc &memerr) {
+		cerr << "allocation error: " << memerr.what() << endl;
+		abort();
+  }
 	return 0;
 }
