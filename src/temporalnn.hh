@@ -48,9 +48,9 @@ class Dendrite : public BrainCell
 	float seekfactor = 0.1;
 	short clusterfactor = 1;
 	float bulge = 0;
-	int input(short input_v, TortoiseTime at_time);
+	virtual int input(short input_v, TortoiseTime at_time);
 #ifdef BUILD_WITH_TIMEQUEUE
-	int bound_input(short input_v, TortoiseTime at_time);
+	virtual int bound_input(short input_v, TortoiseTime at_time);
 #endif
 	int grow();
 
@@ -73,9 +73,9 @@ class Axon : public BrainCell
 	void addDendriteOutput(Dendrite *d);
 	void addNeuronOutput(Neuron *n);
 	int numberOfConnections();
-	int input(short input_v, TortoiseTime at_time);
+	virtual int input(short input_v, TortoiseTime at_time);
 #ifdef BUILD_WITH_TIMEQUEUE
-	int bound_input(short input_v, TortoiseTime at_time);
+	virtual int bound_input(short input_v, TortoiseTime at_time);
 #endif
 };
 
@@ -107,15 +107,15 @@ class Neuron : public BrainCell
 	Neuron *setupDendrites();
 	Neuron *setupAxon();
 	int numberOfConnections();
-	int input(short input_v, TortoiseTime at_time);
-	int fire();
+	virtual int input(short input_v, TortoiseTime at_time);
+	virtual int fire();
 	void setPropagationTime(int prop);
 	void setMaxDendriteConnections(unsigned int max);
 	void setExcitedTime(unsigned short time);
 
 	friend ostream &operator<<(ostream &os, Neuron &neuron);
 #ifdef BUILD_WITH_TIMEQUEUE
-	int bound_input(short input_v, TortoiseTime at_time);
+	virtual int bound_input(short input_v, TortoiseTime at_time);
 #endif
 };
 
