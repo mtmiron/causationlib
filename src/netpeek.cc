@@ -198,14 +198,14 @@ void handle_keypress(uchar key)
 		break;
 	case '-':
 	case '_':
-	case 171:
+	case 173:
 		if (opts.stepsize > 1)
 			opts.stepsize--;
 		cout << "Step size: " << opts.stepsize << endl;
 		break;
 	case '+':
 	case '=':
-	case 173:
+	case 171:
 		cout << "Step size: " << ++opts.stepsize << endl;
 		break;
 	}
