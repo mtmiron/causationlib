@@ -19,11 +19,11 @@ class BrainCell
 {
   protected:
 	TortoiseTime input_time;
-	unsigned short propagation_time = 1;
-	unsigned int max_dendrite_bulge = 50;
 
   public:
 	TortoiseTime fire_time;
+	unsigned short propagation_time = 1;
+	unsigned int max_dendrite_bulge = 50;
 	static bool freeze_connections;
 	static TimeQueue event_queue;
 	Neuron *neuron;
@@ -84,14 +84,7 @@ class Neuron : public BrainCell
 {
   friend class NeuralNet;
   private:
-  	// In milliseconds
-	unsigned short refractory_time = 50;
-	unsigned short excited_time = 100;
-	short refractory_v = -50;
 	short voltage = -80;
-	short resting_v = -80;
-	short action_v = -30;
-	short fire_v = 50;
 
   protected:
 	int x = 0;
@@ -103,6 +96,14 @@ class Neuron : public BrainCell
 	void addDendriteOutput(Neuron *n);
 
   public:
+  	// In milliseconds
+	unsigned short excited_time = 100;
+	unsigned short refractory_time = 50;
+	short refractory_v = -50;
+	short resting_v = -80;
+	short action_v = -30;
+	short fire_v = 50;
+
 	Neuron();
 	Neuron *setupDendrites();
 	Neuron *setupAxon();
@@ -112,6 +113,7 @@ class Neuron : public BrainCell
 	void setPropagationTime(int prop);
 	void setMaxDendriteConnections(unsigned int max);
 	void setExcitedTime(unsigned short time);
+	void setRefractoryTime(unsigned short time);
 
 	friend ostream &operator<<(ostream &os, Neuron &neuron);
 #ifdef BUILD_WITH_TIMEQUEUE
@@ -141,10 +143,10 @@ class NeuralNet
 
 	NeuralNet(int x = 100, int y = 100);
 	virtual void connectTo(NeuralNet *net);
-	virtual int handleDendriticBulge(Neuron *n, float bulge);
+	virtual int growDendrite(Neuron *n, float bulge);
 	virtual cv::Mat createConnectionDensityImage(int width, int height);
-	virtual cv::Mat createCurrentActivityImage(int width, int height, TortoiseTime at_time, int fade_time = 1);
-	virtual cv::Mat &createInputActivityImage(cv::Mat &image, TortoiseTime at_time, int fade_time = 1);
+	virtual cv::Mat createCurrentActivityImage(int width, int height, TortoiseTime at_time, float fade_time = 1);
+	virtual cv::Mat &createInputActivityImage(cv::Mat &image, TortoiseTime at_time, float fade_time = 1);
 	virtual Neuron &getFromWindowPosition(int Px, int Py, int Wx, int Wy);
 };
 

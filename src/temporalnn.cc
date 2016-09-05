@@ -79,7 +79,7 @@ int Dendrite::grow()
 
 	if (bulge < max_dendrite_bulge) {
 		bulge += 1 * seekfactor;
-		return this->neuron->net->handleDendriticBulge(this->neuron, bulge);
+		return this->neuron->net->growDendrite(this->neuron, bulge);
 	}
 	else
 		return -1;
@@ -181,6 +181,7 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 	TortoiseTime time_delta(at_time - fire_time);
 
 	if (time_delta <= refractory_time) {
+		grow:
 		for (uint i = 0; i < dendrites.size(); i++)
 			dendrites[i].grow();
 		return 1;
@@ -200,6 +201,8 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 		fire_time = at_time;
 		voltage = resting_v;
 		return axon.input(fire_v, at_time);
+	} else {
+		goto grow;
 	}
 
 	return 0;
@@ -251,6 +254,12 @@ void Neuron::setExcitedTime(unsigned short time)
 }
 
 
+void Neuron::setRefractoryTime(unsigned short time)
+{
+	this->refractory_time = time;
+}
+
+
 void Neuron::setMaxDendriteConnections(unsigned int max)
 {
 	this->max_dendrite_bulge = max;
@@ -288,7 +297,7 @@ NeuralNet::NeuralNet(int x, int y)
 }
 
 
-int NeuralNet::handleDendriticBulge(Neuron *n, float bulge)
+int NeuralNet::growDendrite(Neuron *n, float bulge)
 {
 	uint xpos = (uint)n->x;
 	uint ypos = (uint)n->y;
