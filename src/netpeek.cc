@@ -12,10 +12,7 @@
 #define DEFAULT_INPUT_STRENGTH 50
 #define DEFAULT_LAYERS 1
 #define DEFAULT_FADE_TIME 1
-#define DEFAULT_PROPAGATION_TIME 1
-#define DEFAULT_MAX_DENDRITE_BULGE 50
 #define DEFAULT_RANDOM_FIRING true
-#define DEFAULT_EXCITED_TIME 100
 
 using namespace std;
 using namespace cv;
