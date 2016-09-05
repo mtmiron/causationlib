@@ -18,7 +18,7 @@ using namespace std;
 
 
 // Map the set of values in [0, max_age_in_nanoseconds) to values in [0,256)
-static inline unsigned char get_faded_color(int fade_time, TortoiseTime &time_delta)
+static inline unsigned char get_faded_color(float fade_time, TortoiseTime &time_delta)
 {
 	long long unsigned int max;
 	int diff;
@@ -56,7 +56,7 @@ Mat NeuralNet::createConnectionDensityImage(int width, int height)
 }
 
 
-Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at_time, int fade_time)
+Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at_time, float fade_time)
 {
 	Mat image(height, width, CV_8UC3, Vec3b(0,0,0));
 	Vec3b pixel(0,0,0);
@@ -68,7 +68,7 @@ Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at
 	uchar fire_c = 0;
 	uchar input_c = 0;
 	TortoiseTime time_delta;
-	struct timespec oldest = { fade_time, 0 };
+	struct timespec oldest = { floor(fade_time), pow(10,9) * (fade_time - (int)fade_time) };
 
 	x_pos = ((float)width / x);
 	y_pos = ((float)height / y);
@@ -102,7 +102,7 @@ Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at
 }
 
 
-Mat &NeuralNet::createInputActivityImage(Mat &image, TortoiseTime at_time, int fade_time)
+Mat &NeuralNet::createInputActivityImage(Mat &image, TortoiseTime at_time, float fade_time)
 {
 	Vec3b pixel(0,0,0);
 	Vec3b color(0,0,0);
@@ -111,7 +111,7 @@ Mat &NeuralNet::createInputActivityImage(Mat &image, TortoiseTime at_time, int f
 	float x_pos = 0;
 	float y_pos = 0;
 	TortoiseTime time_delta;
-	struct timespec oldest = { fade_time, 0 };
+	struct timespec oldest = { (time_t)fade_time, 0 };
 	int width = image.size().width;
 	int height = image.size().height;
 
