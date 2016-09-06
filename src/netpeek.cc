@@ -300,14 +300,6 @@ void density_window_update(vector<NeuralNet *> &nets, TortoiseTime at_time)
 }
 
 
-void consume_timequeue_forever()
-{
-	while (true) {
-		BrainCell::event_queue.applyAllUpto(last_loop_time);
-	}
-}
-
-
 int main(int argc, char **argv)
 {
 	vector<NeuralNet *> nets;
@@ -349,7 +341,6 @@ int main(int argc, char **argv)
   try {
 	// out of memory buffer, so the catch() has some when it goes out of scope
 	volatile char oom_buf[32 * 1024];
-	thread thr;
 
 	for (uchar key = 0; key != 27; key = waitKey(opts.loop_time))
 	{
@@ -367,15 +358,11 @@ int main(int argc, char **argv)
 
 #ifdef BUILD_WITH_TIMEQUEUE
 #  ifdef BUILD_WITH_MULTITHREADING
-//		if (!thr)
-//			thread(consume_timequeue_forever).detach();
-//		thr = true;
 		thread(&TimeQueue::applyAllUpto, &BrainCell::event_queue, at_time).detach();
 #  else
 		BrainCell::event_queue.applyAllUpto(at_time);
 #  endif
 #endif
-
 		if (!opts.no_activity_image)
 			activity_window_update(nets, at_time);
 		if (!opts.no_density_image)
