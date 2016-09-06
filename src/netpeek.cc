@@ -5,7 +5,7 @@
 #include <iostream>
 #include <thread>
 
-#define DEFAULT_STEP_SIZE 50
+#define DEFAULT_STEP_SIZE 95
 #define DEFAULT_NET_HEIGHT 360
 #define DEFAULT_NET_WIDTH 480
 #define DEFAULT_LOOP_TIME 10
@@ -69,7 +69,7 @@ void print_help(char *argv)
 
 void print_status()
 {
-	fprintf(stdout, "\nInput: %dmV  Step size: %d  Net height: %d  Net width: %d\n"
+	fprintf(stdout, "\nInput: %dmV  Step size: %d%%  Net height: %d  Net width: %d\n"
 			"Firing wave: %dms  Net layers: %d  Fade time: %f  Propagation time: %dms  Refractory time: %dms\n"
 			"Max dendrite bulge: %d  Excited duration: %dms\n\n"
 
@@ -177,7 +177,7 @@ void handle_keypress(uchar key)
 		break;
 	case 'r':
 		opts.random_step = !opts.random_step;
-		cout << "Random stimulation of 1 neuron per step size " << (opts.random_step ? "enabled" : "disabled") << endl;
+		cout << "Random stimulation " << (opts.random_step ? "enabled" : "disabled") << endl;
 		break;
 	case 'a':
 		opts.no_activity_image = !opts.no_activity_image;
@@ -198,12 +198,14 @@ void handle_keypress(uchar key)
 	case 173:
 		if (opts.stepsize > 1)
 			opts.stepsize--;
-		cout << "Step size: " << opts.stepsize << endl;
+		cout << "Step size: " << opts.stepsize << "%" << endl;
 		break;
 	case '+':
 	case '=':
 	case 171:
-		cout << "Step size: " << ++opts.stepsize << endl;
+		if (opts.stepsize < 99)
+			opts.stepsize++;
+		cout << "Step size: " << opts.stepsize << "%" << endl;
 		break;
 	}
 }
@@ -250,16 +252,22 @@ void density_window_mouse_callback(int event, int x, int y, int flags, void *use
 
 void interval_step(vector<NeuralNet *> &nets, TortoiseTime at_time)
 {
-	for (uint i = 0; i < nets[0]->neurons.size(); i += opts.stepsize)
-		for (uint j = 0; j < nets[0]->neurons[i].size(); j += opts.stepsize)
+	uint step_x = nets[0]->neurons.size() / (100 - opts.stepsize);
+	uint step_y = nets[0]->neurons[0].size() / (100 - opts.stepsize);
+
+	for (uint i = 0; i < nets[0]->neurons.size(); i += step_x)
+		for (uint j = 0; j < nets[0]->neurons[i].size(); j += step_y)
 			nets[0]->neurons[i][j].input(opts.input_strength, at_time);
 }
 
 
 void random_step(vector<NeuralNet *> &nets, TortoiseTime at_time)
 {
-	for (uint i = (random() % opts.stepsize); i < nets[0]->neurons.size(); i += (random() % opts.stepsize))
-		for (uint j = (random() % opts.stepsize); j < nets[0]->neurons[i].size(); j += (random() % opts.stepsize))
+	uint step_x = nets[0]->neurons.size() / (100 - opts.stepsize);
+	uint step_y = nets[0]->neurons[0].size() / (100 - opts.stepsize);
+
+	for (uint i = (random() % step_x); i < nets[0]->neurons.size(); i += (random() % step_x))
+		for (uint j = (random() % step_y); j < nets[0]->neurons[i].size(); j += (random() % step_y))
 			nets[0]->neurons[i][j].input(opts.input_strength, at_time);
 }
 
@@ -341,6 +349,9 @@ int main(int argc, char **argv)
   try {
 	// out of memory buffer, so the catch() has some when it goes out of scope
 	volatile char oom_buf[32 * 1024];
+#ifdef BUILD_WITH_MULTITHREADING
+	thread thr;
+#endif
 
 	for (uchar key = 0; key != 27; key = waitKey(opts.loop_time))
 	{
@@ -358,7 +369,10 @@ int main(int argc, char **argv)
 
 #ifdef BUILD_WITH_TIMEQUEUE
 #  ifdef BUILD_WITH_MULTITHREADING
-		thread(&TimeQueue::applyAllUpto, &BrainCell::event_queue, at_time).detach();
+		if (!thr.joinable())
+			thr = thread(&TimeQueue::applyAllUpto, &BrainCell::event_queue, at_time);
+		else
+			thr.join();
 #  else
 		BrainCell::event_queue.applyAllUpto(at_time);
 #  endif
