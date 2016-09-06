@@ -222,7 +222,7 @@ void activity_window_mouse_callback(int event, int x, int y, int flags, void *us
 	case EVENT_RBUTTONDOWN: rbutton:
 		rbutton_down = true;
 		neuron = &net->getFromWindowPosition(x, y, DEFAULT_NET_WIDTH, DEFAULT_NET_HEIGHT);
-		net->growDendrite(neuron, neuron->numberOfConnections() + 1);
+		net->growDendrite(neuron, neuron->numberOfConnections() + 2);
 		break;
 	case EVENT_LBUTTONDOWN: lbutton:
 		lbutton_down = true;

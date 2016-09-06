@@ -183,10 +183,7 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 	TortoiseTime time_delta(at_time - fire_time);
 
 	if (time_delta <= refractory_time) {
-		grow:
-		for (uint i = 0; i < dendrites.size(); i++)
-			dendrites[i].grow();
-		return 1;
+		return 0;
 	}
 
 	if (input_v + resting_v >= action_v) {
@@ -204,7 +201,9 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 		voltage = resting_v;
 		return axon.input(fire_v, at_time);
 	} else {
-		goto grow;
+		for (uint i = 0; i < dendrites.size(); i++)
+			dendrites[i].grow();
+		return 1;
 	}
 
 	return 0;
@@ -273,8 +272,9 @@ void Neuron::setMaxDendriteConnections(unsigned int max)
 
 ostream &operator<<(ostream &os, Neuron &neuron)
 {
-	os << "Neuron: (" << neuron.x << "," << neuron.y << ")\t"
-		<< "fire_time: " << neuron.fire_time << "\t" << endl;
+	os << "{(" << neuron.x << "," << neuron.y << "); " << "input_time = " << neuron.input_time
+		<< "; fire_time = " << neuron.fire_time << "; voltage = " << neuron.voltage << "; propagation_time = "
+		<< neuron.axon.propagation_time << "; refractory_time = " << neuron.refractory_time << "}";
 	return os;
 }
 
@@ -301,16 +301,16 @@ NeuralNet::NeuralNet(int x, int y)
 
 int NeuralNet::growDendrite(Neuron *n, float bulge)
 {
-	uint xpos = (uint)n->x;
-	uint ypos = (uint)n->y;
+	int xpos = n->x;
+	int ypos = n->y;
 	int scale = round(bulge);
 
 	if (scale >= dim_x && scale >= dim_y)
 		return 0;
 
-	for (int i = 0; i <= scale; i++)
-		for (int j = 0; j <= scale; j++)
-			if (xpos + i < neurons.size() && ypos + j < neurons[xpos + i].size())
+	for (int i = scale / -2; i <= scale / 2; i++)
+		for (int j = scale / -2; j <= scale / 2; j++)
+			if (xpos + i > 0 && xpos + i < dim_x && ypos + j > 0 && ypos + j < dim_y)
 				if (&neurons[xpos + i][ypos + j] != n) {
 					neurons[xpos + i][ypos + j].addDendriteOutput(n);
 				}
