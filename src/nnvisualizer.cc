@@ -6,8 +6,8 @@ using namespace cv;
 using namespace std;
 
 
-#define PIXEL_X(neuron_x, window_x, net_x) round(MIN((neuron_x * ((float)window_x / net_x)), window_x - 1))
-#define PIXEL_Y(neuron_y, window_y, net_y) round(MIN((neuron_y * ((float)window_y / net_y)), window_y - 1))
+#define PIXEL_X(neuron_x, window_x, net_x) MIN(neuron_x * ((float)window_x / net_x), window_x)
+#define PIXEL_Y(neuron_y, window_y, net_y) MIN(neuron_y * ((float)window_y / net_y), window_y)
 
 
 // Map the set of values in [0, max_age_in_nanoseconds) to values in [0,256)
