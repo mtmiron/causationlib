@@ -16,8 +16,6 @@ int TimeQueue::size()
 
 void TimeQueue::insert(TortoiseTime time, timed_call_t func)
 {
-	lock_guard<mutex> lock(q_insert_mutex);
-
 	queue.insert( q_pair_t(time, func) );
 	return;
 }
@@ -55,9 +53,8 @@ int TimeQueue::clear()
 {
 	int n;
 
-	lock_guard<mutex> lock(q_insert_mutex);
+	lock_guard<mutex> lock(q_erase_mutex);
 	lock_guard<mutex> lock2(q_apply_mutex);
-	lock_guard<mutex> lock3(q_erase_mutex);
 	n = queue.size();
 	queue.clear();
 	return n;
