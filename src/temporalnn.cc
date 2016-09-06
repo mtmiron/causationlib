@@ -308,12 +308,15 @@ int NeuralNet::growDendrite(Neuron *n, float bulge)
 	if (scale >= dim_x && scale >= dim_y)
 		return 0;
 
-	for (int i = scale / -2; i <= scale / 2; i++)
-		for (int j = scale / -2; j <= scale / 2; j++)
-			if (xpos + i > 0 && xpos + i < dim_x && ypos + j > 0 && ypos + j < dim_y)
-				if (&neurons[xpos + i][ypos + j] != n) {
+	for (int i = scale / -2; i <= 0; i++)
+		for (int j = scale / -2; j < 0; j++)
+			if (xpos + i > 0 && ypos + j > 0)
 					neurons[xpos + i][ypos + j].addDendriteOutput(n);
-				}
+
+	for (int i = 0; i < scale / 2; i++)
+		for (int j =1; j < scale / 2; j++)
+			if (xpos + i < dim_x && ypos + j < dim_y)
+					neurons[xpos + i][ypos + j].addDendriteOutput(n);
 
 	return 0;
 }
