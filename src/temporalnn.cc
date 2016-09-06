@@ -1,5 +1,7 @@
 #include "temporalnn.hh"
 #include <iostream>
+#include <mutex>
+
 
 /*
  * Current design requirements (to maintain nnvisualizer.cc parameters) are as
@@ -304,15 +306,16 @@ int NeuralNet::growDendrite(Neuron *n, float bulge)
 	int scale = round(bulge);
 
 	if (scale >= dim_x && scale >= dim_y)
-		return n->numberOfConnections();
+		return 0;
 
 	for (int i = 0; i <= scale; i++)
 		for (int j = 0; j <= scale; j++)
 			if (xpos + i < neurons.size() && ypos + j < neurons[xpos + i].size())
-				if (&neurons[xpos + i][ypos + j] != n)
+				if (&neurons[xpos + i][ypos + j] != n) {
 					neurons[xpos + i][ypos + j].addDendriteOutput(n);
+				}
 
-	return n->numberOfConnections();
+	return 0;
 }
 
 
