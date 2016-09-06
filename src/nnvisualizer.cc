@@ -13,8 +13,8 @@ using namespace std;
 #define DEBUG_OUTPUT
 #endif
 
-#define PIXEL_X(neuron_x, x_scale) MIN(round(neuron_x * x_scale), width - 1)
-#define PIXEL_Y(neuron_y, y_scale) MIN(round(neuron_y * y_scale), height - 1)
+#define PIXEL_X(neuron_x, window_x, net_x) MIN(round(neuron_x * ((float)window_x / net_x)), width - 1)
+#define PIXEL_Y(neuron_y, window_y, net_y) MIN(round(neuron_y * ((float)window_y / net_y)), height - 1)
 
 
 // Map the set of values in [0, max_age_in_nanoseconds) to values in [0,256)
@@ -26,6 +26,18 @@ static inline unsigned char get_faded_color(float fade_time, TortoiseTime &time_
 	max = pow(10,9) * fade_time;
 	diff = (time_delta.tv_sec * pow(10,9) + time_delta.tv_nsec) / (max / 255);
 	return 255 - diff;
+}
+
+
+Neuron &NeuralNet::getFromWindowPosition(int Px, int Py, int Wx, int Wy)
+{
+	int x = round(Px / ((float)Wx / dim_x));
+	int y = round(Py / ((float)Wy / dim_y));
+
+	if (x >= 0 && x < this->dim_x && y >= 0 && y < this->dim_y)
+		return neurons[x][y];
+	else
+		throw NeuralNetException();
 }
 
 
@@ -49,7 +61,7 @@ Mat NeuralNet::createConnectionDensityImage(int width, int height)
 			nconns = this->neurons[i][j].numberOfConnections();
 			if (nconns == 0)
 				continue;
-			image.at<Vec3b>( PIXEL_Y(j, y_pos), PIXEL_X(i, x_pos) ) = color * nconns;
+			image.at<Vec3b>( PIXEL_Y(j, height, dim_y), PIXEL_X(i, width, dim_x) ) = color * nconns;
 		}
 
 	return image;
@@ -93,7 +105,7 @@ Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at
 				color = Vec3b(0, fire_c, 0);
 			else
 				color = Vec3b(input_c, 0, fire_c);
-			image.at<Vec3b>( PIXEL_Y(j, y_pos), PIXEL_X(i, x_pos) ) = color;
+			image.at<Vec3b>( PIXEL_Y(j, height, dim_y), PIXEL_X(i, width, dim_x) ) = color;
 
 			DEBUG_OUTPUT;
 		}
@@ -126,9 +138,9 @@ Mat &NeuralNet::createInputActivityImage(Mat &image, TortoiseTime at_time, float
 				continue;
 
 			color = Vec3b(get_faded_color(fade_time, time_delta), 0, 0);
-			pixel = image.at<Vec3b>( PIXEL_X(i, x_pos), PIXEL_Y(j, y_pos) );
+//			pixel = image.at<Vec3b>( PIXEL_X(i, x_pos), PIXEL_Y(j, y_pos) );
 			if (pixel[2] < get_faded_color(fade_time, time_delta))
-				image.at<Vec3b>( PIXEL_X(i, x_pos), PIXEL_Y(j, y_pos) ) = color;
+//				image.at<Vec3b>( PIXEL_X(i, x_pos), PIXEL_Y(j, y_pos) ) = color;
 
 			DEBUG_OUTPUT;
 		}

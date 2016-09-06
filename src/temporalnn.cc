@@ -316,18 +316,6 @@ int NeuralNet::growDendrite(Neuron *n, float bulge)
 }
 
 
-Neuron &NeuralNet::getFromWindowPosition(int Px, int Py, int Wx, int Wy)
-{
-	int x = round(Px / ((float)Wx / dim_x));
-	int y = round(Py / ((float)Wy / dim_y));
-
-	if (x >= 0 && x < this->dim_x && y >= 0 && y < this->dim_y)
-		return neurons[x][y];
-	else
-		throw NeuralNetException();
-}
-
-
 void NeuralNet::connectTo(NeuralNet *net)
 {
 	for (uint i = 0; i < this->neurons.size(); i++)
