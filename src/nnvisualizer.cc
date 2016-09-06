@@ -5,16 +5,9 @@
 using namespace cv;
 using namespace std;
 
-#if 0
-#define DEBUG_OUTPUT \
-			cout << "(" << i << "," << j << ")" " --> "; \
-			cout << "(" << MIN(round(i * x_pos), width - 1) << "," << MIN(round(j * y_pos), height - 1) << ")\t== {" << time_delta << ": " << diff << "} " << color << endl;
-#else
-#define DEBUG_OUTPUT
-#endif
 
-#define PIXEL_X(neuron_x, window_x, net_x) MIN(round(neuron_x * ((float)window_x / net_x)), width - 1)
-#define PIXEL_Y(neuron_y, window_y, net_y) MIN(round(neuron_y * ((float)window_y / net_y)), height - 1)
+#define PIXEL_X(neuron_x, window_x, net_x) round(MIN((neuron_x * ((float)window_x / net_x)), window_x - 1))
+#define PIXEL_Y(neuron_y, window_y, net_y) round(MIN((neuron_y * ((float)window_y / net_y)), window_y - 1))
 
 
 // Map the set of values in [0, max_age_in_nanoseconds) to values in [0,256)
@@ -48,12 +41,7 @@ Mat NeuralNet::createConnectionDensityImage(int width, int height)
 	int x = this->dim_x;
 	int y = this->dim_y;
 	int nconns = 0;
-	float x_pos = 0;
-	float y_pos = 0;
 	Vec3b color(c,0,c);
-
-	x_pos = ((float)width / x);
-	y_pos = ((float)height / y);
 
 	for (int i = 0; i < x; i++)
 		for (int j = 0; j < y; j++)
@@ -73,20 +61,14 @@ Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at
 	Mat image(height, width, CV_8UC3, Vec3b(0,0,0));
 	Vec3b pixel(0,0,0);
 	Vec3b color(0,0,0);
-	int x = this->dim_x;
-	int y = this->dim_y;
-	float x_pos = 0;
-	float y_pos = 0;
 	uchar fire_c = 0;
 	uchar input_c = 0;
 	TortoiseTime time_delta;
-	struct timespec oldest = { floor(fade_time), pow(10,9) * (fade_time - (int)fade_time) };
+	struct timespec oldest = { (time_t)floor(fade_time), (long)(pow(10,9) * (fade_time - (int)fade_time)) };
 
-	x_pos = ((float)width / x);
-	y_pos = ((float)height / y);
 
-	for (int i = 0; i < x; i++)
-		for (int j = 0; j < y; j++)
+	for (int i = 0; i < dim_x; i++)
+		for (int j = 0; j < dim_y; j++)
 		{
 			time_delta = at_time - this->neurons[i][j].fire_time;
 			// Don't draw neurons with future firing times, or longer than fade_time ago
@@ -106,43 +88,6 @@ Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at
 			else
 				color = Vec3b(input_c, 0, fire_c);
 			image.at<Vec3b>( PIXEL_Y(j, height, dim_y), PIXEL_X(i, width, dim_x) ) = color;
-
-			DEBUG_OUTPUT;
-		}
-
-	return image;
-}
-
-
-Mat &NeuralNet::createInputActivityImage(Mat &image, TortoiseTime at_time, float fade_time)
-{
-	Vec3b pixel(0,0,0);
-	Vec3b color(0,0,0);
-	int x = this->dim_x;
-	int y = this->dim_y;
-	float x_pos = 0;
-	float y_pos = 0;
-	TortoiseTime time_delta;
-	struct timespec oldest = { (time_t)fade_time, 0 };
-	int width = image.size().width;
-	int height = image.size().height;
-
-	x_pos = ((float)width / x);
-	y_pos = ((float)height / y);
-
-	for (int i = 0; i < x; i++)
-		for (int j = 0; j < y; j++)
-		{
-			time_delta = at_time - this->neurons[i][j].input_time;
-			if (time_delta > oldest || time_delta < 0)
-				continue;
-
-			color = Vec3b(get_faded_color(fade_time, time_delta), 0, 0);
-//			pixel = image.at<Vec3b>( PIXEL_X(i, x_pos), PIXEL_Y(j, y_pos) );
-			if (pixel[2] < get_faded_color(fade_time, time_delta))
-//				image.at<Vec3b>( PIXEL_X(i, x_pos), PIXEL_Y(j, y_pos) ) = color;
-
-			DEBUG_OUTPUT;
 		}
 
 	return image;
