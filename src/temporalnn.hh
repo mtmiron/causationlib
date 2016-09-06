@@ -146,7 +146,6 @@ class NeuralNet
 	virtual int growDendrite(Neuron *n, float bulge);
 	virtual cv::Mat createConnectionDensityImage(int width, int height);
 	virtual cv::Mat createCurrentActivityImage(int width, int height, TortoiseTime at_time, float fade_time = 1);
-	virtual cv::Mat &createInputActivityImage(cv::Mat &image, TortoiseTime at_time, float fade_time = 1);
 	virtual Neuron &getFromWindowPosition(int Px, int Py, int Wx, int Wy);
 };
 
