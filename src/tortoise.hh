@@ -43,9 +43,9 @@ class TimeQueue
 {
   private:
 	multimap< TortoiseTime, timed_call_t > queue;
-	mutex q_insert_mutex;
-	mutex q_apply_mutex;
-	mutex q_erase_mutex;
+	recursive_mutex q_insert_mutex;
+	recursive_mutex q_apply_mutex;
+	recursive_mutex q_erase_mutex;
 
 
   public:

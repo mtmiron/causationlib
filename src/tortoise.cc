@@ -16,28 +16,27 @@ int TimeQueue::size()
 
 void TimeQueue::insert(TortoiseTime time, timed_call_t func)
 {
+	q_erase_mutex.lock();
 	queue.insert( q_pair_t(time, func) );
+	q_erase_mutex.unlock();
 	return;
 }
 
 void TimeQueue::applyAllUpto(const TortoiseTime time)
 {
-	auto lambda = [&](const TortoiseTime t) {
-		lock_guard<mutex> lock(q_apply_mutex);
-		if (queue.size() == 0)
-			return -1;
-		auto next = queue.begin();
-		if (next->first <= t) {
-			timed_call_t func = next->second;
-			queue.erase(next);
-			return func();
-		} else {
-			return -1;
-		}
-	};
+	if (queue.size() == 0)
+		return;
 
-	while (lambda(time) != -1)
-		;
+	q_erase_mutex.lock();
+	for (auto next = queue.begin(); next != queue.end(); next = queue.begin())
+	{
+		if (next->first <= time)
+			next->second();
+		else
+			break;
+		queue.erase(next);
+	}
+	q_erase_mutex.unlock();
 }
 
 int TimeQueue::nextIsEarlierThan(TortoiseTime &time)
@@ -46,17 +45,17 @@ int TimeQueue::nextIsEarlierThan(TortoiseTime &time)
 		return -1;
 
 	auto next = queue.begin();
-	return (TortoiseTime)next->first <= time;
+	return (TortoiseTime)next->first < time;
 }
 
 int TimeQueue::clear()
 {
 	int n;
 
-	lock_guard<mutex> lock(q_erase_mutex);
-	lock_guard<mutex> lock2(q_apply_mutex);
+	q_erase_mutex.lock();
 	n = queue.size();
 	queue.clear();
+	q_erase_mutex.unlock();
 	return n;
 }
 
@@ -65,10 +64,11 @@ int TimeQueue::applyNext()
 	if (queue.size() == 0)
 		return -1;
 
-	lock_guard<mutex> lock(q_apply_mutex);
+	q_erase_mutex.lock();
 	auto next = queue.begin();
 	timed_call_t ret = next->second;
 	queue.erase(next);
+	q_erase_mutex.unlock();
 	return ret();
 }
 
