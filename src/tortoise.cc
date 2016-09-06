@@ -24,7 +24,7 @@ void TimeQueue::insert(TortoiseTime time, timed_call_t func)
 
 void TimeQueue::applyAllUpto(const TortoiseTime time)
 {
-	auto lambda = [=](const TortoiseTime t) {
+	auto lambda = [&](const TortoiseTime t) {
 		lock_guard<mutex> lock(q_apply_mutex);
 		if (queue.size() == 0)
 			return -1;
