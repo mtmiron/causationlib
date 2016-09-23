@@ -27,10 +27,10 @@ struct options {
 	int input_strength = DEFAULT_INPUT_STRENGTH;
 	uint layers = DEFAULT_LAYERS;
 	float fade_time = DEFAULT_FADE_TIME;
-	int propagation_time = 0;
-	int max_dendrite_bulge = 0;
-	int excited_time = 0;
-	int refractory_time = 0;
+	int propagation_time = -1;
+	int max_dendrite_bulge = -1;
+	int excited_time = -1;
+	int refractory_time = -1;
 	bool random_step = DEFAULT_RANDOM_FIRING;
 	bool input_enabled = true;
 	bool freeze_connections = false;
@@ -378,19 +378,19 @@ int main(int argc, char **argv)
 		for (int x = 0; x < opts.width; x++)
 			for (int y = 0; y < opts.height; y++)
 			{
-				if (opts.propagation_time)
+				if (opts.propagation_time != -1)
 					nets[i]->neurons[x][y].setPropagationTime(opts.propagation_time);
 				else
 					opts.propagation_time = nets[i]->neurons[x][y].propagation_time;
-				if (opts.max_dendrite_bulge)
+				if (opts.max_dendrite_bulge != -1)
 					nets[i]->neurons[x][y].setMaxDendriteConnections(opts.max_dendrite_bulge);
 				else
 					opts.max_dendrite_bulge = nets[i]->neurons[x][y].max_dendrite_bulge;
-				if (opts.excited_time)
+				if (opts.excited_time != -1)
 					nets[i]->neurons[x][y].setExcitedTime(opts.excited_time);
 				else
 					opts.excited_time = nets[i]->neurons[x][y].excited_time;
-				if (opts.refractory_time)
+				if (opts.refractory_time != -1)
 					nets[i]->neurons[x][y].setRefractoryTime(opts.refractory_time);
 				else
 					opts.refractory_time = nets[i]->neurons[x][y].refractory_time;
