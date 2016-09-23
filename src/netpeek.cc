@@ -110,6 +110,8 @@ struct options parse_args(int argc, char **argv)
 		case 'c':
 			opts.camera_input = true;
 			opts.input_enabled = false;
+			opts.max_dendrite_bulge = 2;
+			opts.fade_time = 0;
 			break;
 		case 's':
 			opts.stepsize = atoi(optarg);
