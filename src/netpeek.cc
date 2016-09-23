@@ -361,12 +361,14 @@ int main(int argc, char **argv)
 {
 	vector<NeuralNet *> nets;
 	TortoiseTime at_time;
+	VideoCapture cam;
+	try {
 #ifdef BUILD_WITH_OPENNI
-	VideoCapture cam(cv::CAP_OPENNI);
+		cam = VideoCapture(cv::CAP_OPENNI);
 #else
-	VideoCapture cam(0);
+		cam = VideoCapture(0);
 #endif
-
+	} catch (...) { }
 
 	opts = parse_args(argc, argv);
 	clock_gettime(CLOCK_REALTIME, &at_time);
