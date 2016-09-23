@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "temporalnn.hh"
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
 #include <thread>
 
@@ -35,6 +36,7 @@ struct options {
 	bool freeze_connections = false;
 	bool no_density_image = false;
 	bool no_activity_image = false;
+	bool camera_input = false;
 };
 
 struct options opts;
@@ -51,6 +53,7 @@ void print_help(char *argv)
 		"\t\t-a\tDon't draw neural activity image\n"
 		"\t\t-R\tDon't randomize step size for neuron input loop\n"
 		"\t\t-F\tDon't self assemble neurons (freeze state)\n"
+		"\t\t-c\tGrab frames from a camera and use the pixels as input\n"
 		"\t\t-p ARG\tPropagation time (time from neuron firing to hitting next neuron)\n"
 		"\t\t-f ARG\tFade time for activity image\n"
 		"\t\t-s ARG\tStep size for neuron input loop\n"
@@ -101,9 +104,13 @@ struct options parse_args(int argc, char **argv)
 {
 	int c = 0;
 
-	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:Rr:Ff:p:m:e:")) != -1)
+	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:Rr:Ff:p:m:e:c")) != -1)
 	{
 		switch (c) {
+		case 'c':
+			opts.camera_input = true;
+			opts.input_enabled = false;
+			break;
 		case 's':
 			opts.stepsize = atoi(optarg);
 			break;
@@ -221,12 +228,12 @@ void activity_window_mouse_callback(int event, int x, int y, int flags, void *us
 	switch (event) {
 	case EVENT_RBUTTONDOWN: rbutton:
 		rbutton_down = true;
-		neuron = &net->getFromWindowPosition(x, y, DEFAULT_NET_WIDTH, DEFAULT_NET_HEIGHT);
+		neuron = &net->getFromWindowPosition(x, y, opts.width, opts.height);
 		net->growDendrite(neuron, neuron->numberOfConnections() + 2);
 		break;
 	case EVENT_LBUTTONDOWN: lbutton:
 		lbutton_down = true;
-		neuron = &net->getFromWindowPosition(x, y, DEFAULT_NET_WIDTH, DEFAULT_NET_HEIGHT);
+		neuron = &net->getFromWindowPosition(x, y, opts.width, opts.height);
 		neuron->input(opts.input_strength, last_loop_time + opts.loop_time);
 		break;
 	case EVENT_MOUSEMOVE:
@@ -272,6 +279,48 @@ void random_step(vector<NeuralNet *> &nets, TortoiseTime at_time)
 }
 
 
+void frame_step(vector<NeuralNet *> &nets, TortoiseTime at_time, Mat &frame)
+{
+	Size dim = frame.size();
+	uchar pixel = 0;
+	Neuron *n;
+
+	for (uint i = 0; i < dim.width; i++)
+		for (uint j = 0; j < dim.height; j++) {
+			pixel = frame.at<uchar>(j, i);
+			n = &nets[0]->getFromWindowPosition(i, j, dim.width, dim.height);
+			n->input(pixel, at_time);
+		}
+}
+
+
+/*
+ * NOTE:
+ *
+ * no way to specify the time at which to grab a frame, so
+ * this function dictates the time of neuron input as the time
+ * the frame was grabbed and returns it for the main loop.
+ */
+TortoiseTime camera_window_update(vector<NeuralNet *> &nets, VideoCapture &cam)
+{
+	Mat frame, color_frame;
+	TortoiseTime at_time;
+
+#ifdef BUILD_WITH_OPENNI
+	cam.retrieve(frame, 6);
+#else
+	cam.retrieve(color_frame, 0);
+	cvtColor(color_frame, frame, CV_BGR2GRAY);
+#endif
+
+	imshow("camera frame", frame);
+	clock_gettime(CLOCK_REALTIME, &at_time);
+	frame_step(nets, at_time, frame);
+
+	return at_time;
+}
+
+
 void activity_window_update(vector<NeuralNet *> &nets, TortoiseTime at_time)
 {
 	static char windowname[256] = { 0 };
@@ -281,7 +330,7 @@ void activity_window_update(vector<NeuralNet *> &nets, TortoiseTime at_time)
 	for (uint i = 0; i < opts.layers; i++)
 	{
 		sprintf(windowname, "layer #%d: firing neurons", i);
-		activity_image = nets[i]->createCurrentActivityImage(DEFAULT_NET_WIDTH, DEFAULT_NET_HEIGHT, at_time, opts.fade_time);
+		activity_image = nets[i]->createCurrentActivityImage(opts.width, opts.height, at_time, opts.fade_time);
 		imshow(windowname, activity_image);
 		if (set_callback)
 			setMouseCallback(windowname, activity_window_mouse_callback, nets[i]);
@@ -299,7 +348,7 @@ void density_window_update(vector<NeuralNet *> &nets, TortoiseTime at_time)
 	for (uint i = 0; i < opts.layers; i++)
 	{
 		sprintf(windowname, "layer #%d: connection densities", i);
-		densities_image = nets[i]->createConnectionDensityImage(DEFAULT_NET_WIDTH, DEFAULT_NET_HEIGHT);
+		densities_image = nets[i]->createConnectionDensityImage(opts.width, opts.height);
 		imshow(windowname, densities_image);
 		if (set_callback)
 			setMouseCallback(windowname, density_window_mouse_callback, nets[i]);
@@ -312,6 +361,12 @@ int main(int argc, char **argv)
 {
 	vector<NeuralNet *> nets;
 	TortoiseTime at_time;
+#ifdef BUILD_WITH_OPENNI
+	VideoCapture cam(cv::CAP_OPENNI);
+#else
+	VideoCapture cam(0);
+#endif
+
 
 	opts = parse_args(argc, argv);
 	clock_gettime(CLOCK_REALTIME, &at_time);
@@ -357,7 +412,13 @@ int main(int argc, char **argv)
 	{
 		handle_keypress(key);
 
-		clock_gettime(CLOCK_REALTIME, &at_time);
+		if (opts.camera_input) {
+			cam.grab();
+			at_time = camera_window_update(nets, cam);
+		} else {
+			clock_gettime(CLOCK_REALTIME, &at_time);
+		}
+
 		last_loop_time = at_time;
 
 		if (opts.input_enabled) {
