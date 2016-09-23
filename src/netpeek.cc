@@ -398,8 +398,10 @@ int main(int argc, char **argv)
 	}
 	print_status();
 
-	for (uint i = 0; i < opts.layers - 1; i++)
+	for (uint i = 0; i < opts.layers - 1; i++) {
 		nets[i]->connectTo(nets[i+1]);
+		nets[i+1]->connectTo(nets[i]);
+	}
 
   try {
 	// out of memory buffer, so the catch() has some when it goes out of scope
