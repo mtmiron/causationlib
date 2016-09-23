@@ -290,8 +290,10 @@ void frame_step(vector<NeuralNet *> &nets, TortoiseTime at_time, Mat &frame)
 	for (uint i = 0; i < dim.width; i++)
 		for (uint j = 0; j < dim.height; j++) {
 			pixel = frame.at<uchar>(j, i);
-			n = &nets[0]->getFromWindowPosition(i, j, dim.width, dim.height);
-			n->input(pixel, at_time);
+			try {
+				n = &nets[0]->getFromWindowPosition(i, j, dim.width, dim.height);
+				n->input(pixel, at_time);
+			} catch (...) { }
 		}
 }
 
