@@ -1,4 +1,4 @@
-#include "../tortoise.hh"
+#include "../src/tortoise.hh"
 #include <stdlib.h>
 #include <iostream>
 #include <algorithm>
@@ -29,7 +29,7 @@ int main()
 	clock_gettime(CLOCK_REALTIME, &time);
 	time.tv_sec += 10;
 	cout << "Applying all before " << time << "..." << endl;
-	queue.applyAllBefore(time);
+	queue.applyAllUpto(time);
 	cout << endl << "Applying the rest..." << endl;
 	while (queue.applyNext() != -1)
 		;
