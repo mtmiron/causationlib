@@ -91,7 +91,8 @@ void print_status()
 			"'-' - decrease step size\n"
 			"'+' - increase step size\n\n"
 			"Mouse LButton - fire neurons at mouse (x,y) position\n"
-			"Mouse RButton - call NeuralNet's growDendrite() function\n",
+			"Mouse RButton - call NeuralNet's growDendrite() function\n"
+			"Mouse MButton - dump info about a neuron under the cursor\n",
 
 			opts.input_strength, opts.stepsize, opts.height, opts.width,
 			opts.loop_time, opts.layers, opts.fade_time, opts.propagation_time,
@@ -228,31 +229,38 @@ void activity_window_mouse_callback(int event, int x, int y, int flags, void *us
 {
 	Neuron *neuron = NULL;
 	NeuralNet *net = (NeuralNet *)userdata;
-	static bool rbutton_down = false, lbutton_down = false;
+	static bool rbutton_down = false, lbutton_down = false, mbutton_down = false;
 			
   try {
 	switch (event) {
 	case EVENT_RBUTTONDOWN: rbutton:
 		rbutton_down = true;
 		neuron = &net->getFromWindowPosition(x, y, opts.width, opts.height);
-		cout << *neuron << endl;
 		net->growDendrite(neuron, neuron->numberOfConnections() + 2);
 		break;
 	case EVENT_LBUTTONDOWN: lbutton:
 		lbutton_down = true;
 		neuron = &net->getFromWindowPosition(x, y, opts.width, opts.height);
-		cout << *neuron << endl;
 		neuron->input(opts.input_strength, last_loop_time + opts.loop_time);
+		break;
+	case EVENT_MBUTTONDOWN: mbutton:
+		mbutton_down = true;
+		neuron = &net->getFromWindowPosition(x, y, opts.width, opts.height);
+		cout << *neuron << endl;
 		break;
 	case EVENT_MOUSEMOVE:
 		if (lbutton_down) goto lbutton;
 		else if (rbutton_down) goto rbutton;
+		else if (mbutton_down) goto mbutton;
 		break;
 	case EVENT_LBUTTONUP:
 		lbutton_down = false;
 		break;
 	case EVENT_RBUTTONUP:
 		rbutton_down = false;
+		break;
+	case EVENT_MBUTTONUP:
+		mbutton_down = false;
 		break;
 	}
   } catch (NeuralNetException &e) { cerr << "bad (x,y): (" << x << "," << y << ")" << endl; }
