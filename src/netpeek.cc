@@ -111,7 +111,11 @@ struct options parse_args(int argc, char **argv)
 			opts.camera_input = true;
 			opts.input_enabled = false;
 			opts.max_dendrite_bulge = 2;
-			opts.fade_time = 0;
+#ifdef BUILD_WITH_MULTITHREADING
+			opts.fade_time = 1.0;
+#else
+			opts.fade_time = 0.0;
+#endif
 			break;
 		case 's':
 			opts.stepsize = atoi(optarg);
