@@ -4,7 +4,9 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
-#include <thread>
+#ifdef BUILD_WITH_MULTITHREADING
+#	include <thread>
+#endif
 
 #define DEFAULT_STEP_SIZE 95
 #define DEFAULT_NET_HEIGHT 360
@@ -325,7 +327,7 @@ TortoiseTime camera_window_update(vector<NeuralNet *> &nets, VideoCapture &cam)
 	TortoiseTime at_time;
 
 #ifdef BUILD_WITH_OPENNI
-	cam.retrieve(frame, 6);
+	cam.retrieve(frame, CAP_OPENNI_GRAY_IMAGE);
 #else
 	cam.retrieve(color_frame, 0);
 	cvtColor(color_frame, frame, CV_BGR2GRAY);
@@ -347,7 +349,7 @@ void activity_window_update(vector<NeuralNet *> &nets, TortoiseTime at_time)
 
 	for (uint i = 0; i < opts.layers; i++)
 	{
-		sprintf(windowname, "layer #%d: firing neurons", i);
+		sprintf(windowname, "net (layer) #%d: neuron activity", i);
 		activity_image = nets[i]->createCurrentActivityImage(opts.width, opts.height, at_time, opts.fade_time);
 		imshow(windowname, activity_image);
 		if (set_callback)
@@ -365,7 +367,7 @@ void density_window_update(vector<NeuralNet *> &nets, TortoiseTime at_time)
 
 	for (uint i = 0; i < opts.layers; i++)
 	{
-		sprintf(windowname, "layer #%d: connection densities", i);
+		sprintf(windowname, "net (layer) #%d: neuron connection densities", i);
 		densities_image = nets[i]->createConnectionDensityImage(opts.width, opts.height);
 		imshow(windowname, densities_image);
 		if (set_callback)

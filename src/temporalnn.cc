@@ -175,9 +175,9 @@ int Neuron::numberOfConnections()
 
 
 #ifdef BUILD_WITH_TIMEQUEUE
-int Neuron::bound_input(short &input_v, TortoiseTime &at_time)
+int Neuron::bound_input(short input_v, TortoiseTime at_time)
 #else
-int Neuron::input(short &input_v, TortoiseTime &at_time)
+int Neuron::input(short input_v, TortoiseTime at_time)
 #endif
 {
 	TortoiseTime time_delta(at_time - fire_time);
@@ -213,7 +213,7 @@ int Neuron::input(short &input_v, TortoiseTime &at_time)
 
 
 #ifdef BUILD_WITH_TIMEQUEUE
-int Neuron::input(short &input_v, TortoiseTime &at_time)
+int Neuron::input(short input_v, TortoiseTime at_time)
 {
 	event_queue.insert(at_time, BIND(Neuron));
 	return 0;
