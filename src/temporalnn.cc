@@ -175,16 +175,18 @@ int Neuron::numberOfConnections()
 
 
 #ifdef BUILD_WITH_TIMEQUEUE
-int Neuron::bound_input(short input_v, TortoiseTime at_time)
+int Neuron::bound_input(short &input_v, TortoiseTime &at_time)
 #else
-int Neuron::input(short input_v, TortoiseTime at_time)
+int Neuron::input(short &input_v, TortoiseTime &at_time)
 #endif
 {
 	TortoiseTime time_delta(at_time - fire_time);
 
 	if (time_delta <= refractory_time) {
+		this->refracting = true;
 		return 0;
 	}
+	this->refracting = false;
 
 	if (input_v + resting_v >= action_v) {
 		fire_time = at_time;
@@ -211,7 +213,7 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 
 
 #ifdef BUILD_WITH_TIMEQUEUE
-int Neuron::input(short input_v, TortoiseTime at_time)
+int Neuron::input(short &input_v, TortoiseTime &at_time)
 {
 	event_queue.insert(at_time, BIND(Neuron));
 	return 0;
@@ -272,11 +274,11 @@ void Neuron::setMaxDendriteConnections(unsigned int max)
 
 ostream &operator<<(ostream &os, Neuron &neuron)
 {
-	os << "{(" << neuron.x << "," << neuron.y << "); " << "input_time = " << neuron.input_time
-		<< "; fire_time = " << neuron.fire_time << "; voltage = " << neuron.voltage << "mV; propagation_time = "
-		<< neuron.axon.propagation_time << "ms; refractory_time = " << neuron.refractory_time << "ms; "
-		<< "excited_time = " << neuron.excited_time << "ms; " << "num connections = " << neuron.numberOfConnections()
-		<< "}";
+	os << "{(" << neuron.x << "," << neuron.y << "); " << "input_t = " << neuron.input_time
+		<< "; fire_t = " << neuron.fire_time << "; voltage = " << neuron.voltage << "mV; propagation_t = "
+		<< neuron.axon.propagation_time << "ms; refractory_t = " << neuron.refractory_time << "ms; "
+		<< "excited_t = " << neuron.excited_time << "ms; " << "num connections = " << neuron.numberOfConnections()
+		<< "; " << "refracting = " << neuron.refracting << "}";
 	return os;
 }
 

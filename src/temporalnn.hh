@@ -85,6 +85,7 @@ class Neuron : public BrainCell
   friend class NeuralNet;
   private:
 	short voltage = -80;
+	bool refracting = false;
 
   protected:
 	int x = 0;
