@@ -231,11 +231,13 @@ void activity_window_mouse_callback(int event, int x, int y, int flags, void *us
 	case EVENT_RBUTTONDOWN: rbutton:
 		rbutton_down = true;
 		neuron = &net->getFromWindowPosition(x, y, opts.width, opts.height);
+		cout << *neuron << endl;
 		net->growDendrite(neuron, neuron->numberOfConnections() + 2);
 		break;
 	case EVENT_LBUTTONDOWN: lbutton:
 		lbutton_down = true;
 		neuron = &net->getFromWindowPosition(x, y, opts.width, opts.height);
+		cout << *neuron << endl;
 		neuron->input(opts.input_strength, last_loop_time + opts.loop_time);
 		break;
 	case EVENT_MOUSEMOVE:
