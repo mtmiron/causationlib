@@ -208,7 +208,9 @@ TortoiseTime TortoiseTime::operator-(long long ms)
 ostream &operator<<(ostream &os, const TortoiseTime &t)
 {
 	char buf[256] = { 0 };
+	TortoiseTime ts;
 
-	sprintf(buf, "%10.010ld.%9.09ld", t.tv_sec, t.tv_nsec);
+	clock_gettime(CLOCK_REALTIME, &ts);
+	sprintf(buf, "%10.010ld.%9.09ld (%10.010ld.%9.09lds ago)", t.tv_sec, t.tv_nsec, (ts - t).tv_sec, (ts - t).tv_nsec);
 	return os << buf;
 }
