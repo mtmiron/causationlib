@@ -12,5 +12,8 @@ If for some reason you want to run the code here, you'll need:
  - OpenCV
  - g++ or an equivalent C++ compiler
 
-If you want to grab image frames from a webcam and use that as input to a neural net (using the netpeek executable), you'll also need:
+### Optional
+If you want to grab image frames from a webcam and use that as input to a neural net (using the _netpeek_ executable), you'll also need:
  - any attached camera with drivers OpenCV can utilize
+
+If you have difficulty with the neuron activity windows when running the _netpeek_ executable, the issue is probably the fade time: use the _-f_ argument to set the amount of prior activity that's displayed (in seconds.)
