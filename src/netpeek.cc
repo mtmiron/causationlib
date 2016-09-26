@@ -39,23 +39,28 @@ struct options {
 	bool no_density_image = false;
 	bool no_activity_image = false;
 	bool camera_input = false;
+	bool debug = false;
 };
 
 struct options opts;
 static TortoiseTime last_loop_time;
 extern TimeQueue BrainCell::event_queue;
 extern bool BrainCell::freeze_connections;
+extern bool BrainCell::shrink_dendrites;
+extern bool BrainCell::debug;
 
 
 void print_help(char *argv)
 {
 	printf("Usage: %s [opts]\n\n\tOptions are:\n"
 		"\t\t-h\tThis help\n"
+//		"\t\t-D\tDump huge amounts of debug data\n"
 		"\t\t-d\tDon't draw neural connection density image\n"
 		"\t\t-a\tDon't draw neural activity image\n"
 		"\t\t-R\tDon't randomize step size for neuron input loop\n"
 		"\t\t-F\tDon't self assemble neurons (freeze state)\n"
 		"\t\t-c\tGrab frames from a camera and use the pixels as input\n"
+		"\t\t-S\tShrink dendrites, as well as grow them\n"
 		"\t\t-p ARG\tPropagation time (time from neuron firing to hitting next neuron)\n"
 		"\t\t-f ARG\tFade time for activity image\n"
 		"\t\t-s ARG\tStep size for neuron input loop\n"
@@ -107,7 +112,7 @@ struct options parse_args(int argc, char **argv)
 {
 	int c = 0;
 
-	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:Rr:Ff:p:m:e:c")) != -1)
+	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:Rr:Ff:p:m:e:cDS")) != -1)
 	{
 		switch (c) {
 		case 'c':
@@ -119,6 +124,13 @@ struct options parse_args(int argc, char **argv)
 #else
 			opts.fade_time = 0.0;
 #endif
+			break;
+		case 'S':
+			BrainCell::shrink_dendrites = true;
+			break;
+		case 'D':
+			opts.debug = true;
+			BrainCell::debug = true;
 			break;
 		case 's':
 			opts.stepsize = atoi(optarg);
