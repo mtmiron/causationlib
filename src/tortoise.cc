@@ -16,9 +16,13 @@ int TimeQueue::size()
 
 void TimeQueue::insert(TortoiseTime time, timed_call_t func)
 {
+#ifdef BUILD_WITH_MULTITHREADING
 	q_erase_mutex.lock();
+#endif
 	queue.insert( q_pair_t(time, func) );
+#ifdef BUILD_WITH_MULTITHREADING
 	q_erase_mutex.unlock();
+#endif
 	return;
 }
 
@@ -27,7 +31,9 @@ void TimeQueue::applyAllUpto(const TortoiseTime time)
 	if (queue.size() == 0)
 		return;
 
+#ifdef BUILD_WITH_MULTITHREADING
 	q_erase_mutex.lock();
+#endif
 	for (auto next = queue.begin(); next != queue.end(); next = queue.begin())
 	{
 		if (next->first <= time)
@@ -36,7 +42,9 @@ void TimeQueue::applyAllUpto(const TortoiseTime time)
 			break;
 		queue.erase(next);
 	}
+#ifdef BUILD_WITH_MULTITHREADING
 	q_erase_mutex.unlock();
+#endif
 }
 
 int TimeQueue::nextIsEarlierThan(TortoiseTime &time)
