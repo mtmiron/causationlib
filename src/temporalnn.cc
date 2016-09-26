@@ -88,6 +88,22 @@ int Dendrite::grow()
 }
 
 
+int Dendrite::shrink(Neuron *n)
+{
+	if (freeze_connections)
+		return -1;
+
+	n->axon.d_output.clear();
+	bulge -= 1 * seekfactor;
+	if (bulge < 0) {
+		bulge = 0;
+		return 0;
+	}
+
+	return this->neuron->net->growDendrite(this->neuron, bulge);
+}
+
+
 /*
  * class Axon
  */
@@ -191,7 +207,11 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 	if (input_v + resting_v >= action_v) {
 		fire_time = at_time;
 		voltage = resting_v;
-		return axon.input(fire_v, at_time);
+		int ret = axon.input(fire_v, at_time);
+		if (shrink_dendrites)
+			for (uint i = 0; i < dendrites.size(); i++)
+				dendrites[i].shrink(this);
+		return ret;
 	} else if (at_time - input_time > excited_time) {
 		voltage = resting_v;
 	}
@@ -201,7 +221,11 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 	if ( voltage >= action_v ) {
 		fire_time = at_time;
 		voltage = resting_v;
-		return axon.input(fire_v, at_time);
+		int ret = axon.input(fire_v, at_time);
+		if (shrink_dendrites)
+			for (uint i = 0; i < dendrites.size(); i++)
+				dendrites[i].shrink(this);
+		return ret;
 	} else {
 		for (uint i = 0; i < dendrites.size(); i++)
 			dendrites[i].grow();

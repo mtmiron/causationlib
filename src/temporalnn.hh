@@ -25,6 +25,8 @@ class BrainCell
 	unsigned short propagation_time = 1;
 	unsigned int max_dendrite_bulge = 50;
 	static bool freeze_connections;
+	static bool debug;
+	static bool shrink_dendrites;
 	static TimeQueue event_queue;
 	Neuron *neuron;
 	NeuralNet *net;
@@ -53,6 +55,7 @@ class Dendrite : public BrainCell
 	virtual int bound_input(short input_v, TortoiseTime at_time);
 #endif
 	int grow();
+	int shrink(Neuron *n);
 
   public:
 	explicit Dendrite(Neuron *n);
@@ -62,6 +65,7 @@ class Dendrite : public BrainCell
 class Axon : public BrainCell
 {
   friend class Neuron;
+  friend class Dendrite;
   private:
 	short vesicles = 0;
 
@@ -83,6 +87,7 @@ class Axon : public BrainCell
 class Neuron : public BrainCell
 {
   friend class NeuralNet;
+  friend class Dendrite;
   private:
 	short voltage = -80;
 	bool refracting = false;
