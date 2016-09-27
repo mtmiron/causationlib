@@ -83,10 +83,12 @@ Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at
 			else
 				input_c = get_faded_color(fade_time, time_delta);
 
-			if (this->neurons[i][j].fire_time == this->neurons[i][j].input_time)
+			if (this->neurons[i][j].fired_reason == CONCURRENT)
 				color = Vec3b(0, fire_c, 0);
+			else if (this->neurons[i][j].fired_reason == SINGLE)
+				color = Vec3b(0, 0, fire_c);
 			else
-				color = Vec3b(input_c, 0, fire_c);
+				color = Vec3b(input_c, 0, 0);
 			image.at<Vec3b>( PIXEL_Y(j, height, dim_y), PIXEL_X(i, width, dim_x) ) = color;
 		}
 

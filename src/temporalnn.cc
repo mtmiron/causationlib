@@ -198,13 +198,16 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 {
 	TortoiseTime time_delta(at_time - fire_time);
 
+	// Refracting
 	if (time_delta <= refractory_time) {
 		this->refracting = true;
 		return 0;
 	}
 	this->refracting = false;
 
+	// Input strong enough to trigger firing on its own
 	if (input_v + resting_v >= action_v) {
+		fired_reason = SINGLE;
 		fire_time = at_time;
 		voltage = resting_v;
 		int ret = axon.input(fire_v, at_time);
@@ -216,9 +219,11 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 		voltage = resting_v;
 	}
 
+	// Sub-threshold input
 	input_time = at_time;
 	voltage += input_v;
 	if ( voltage >= action_v ) {
+		fired_reason = CONCURRENT;
 		fire_time = at_time;
 		voltage = resting_v;
 		int ret = axon.input(fire_v, at_time);
@@ -232,6 +237,7 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 		return 1;
 	}
 
+	fired_reason = NONE;
 	return 0;
 }
 
@@ -342,7 +348,7 @@ int NeuralNet::growDendrite(Neuron *n, float bulge)
 					neurons[xpos + i][ypos + j].addDendriteOutput(n);
 
 	for (int i = 0; i < scale / 2; i++)
-		for (int j =1; j < scale / 2; j++)
+		for (int j = 1; j < scale / 2; j++)
 			if (xpos + i < dim_x && ypos + j < dim_y)
 					neurons[xpos + i][ypos + j].addDendriteOutput(n);
 

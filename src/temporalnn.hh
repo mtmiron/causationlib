@@ -14,6 +14,12 @@ using namespace std;
 class Neuron;
 class NeuralNet;
 
+enum fire_reason {
+	NONE,
+	CONCURRENT,
+	SINGLE,
+};
+
 
 class BrainCell
 {
@@ -22,6 +28,7 @@ class BrainCell
 
   public:
 	TortoiseTime fire_time;
+	enum fire_reason fired_reason;
 	unsigned short propagation_time = 1;
 	unsigned int max_dendrite_bulge = 50;
 	static bool freeze_connections;
@@ -69,10 +76,10 @@ class Axon : public BrainCell
   private:
 	short vesicles = 0;
 
+  public:
 	unordered_set<Dendrite *> d_output;
 	unordered_set<Neuron *> n_output;
 
-  public:
 	explicit Axon(Neuron *n);
 	void addDendriteOutput(Dendrite *d);
 	void addNeuronOutput(Neuron *n);
