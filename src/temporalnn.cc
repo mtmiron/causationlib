@@ -237,7 +237,6 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 		return 1;
 	}
 
-	fired_reason = NONE;
 	return 0;
 }
 

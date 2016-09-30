@@ -40,6 +40,7 @@ struct options {
 	bool no_activity_image = false;
 	bool camera_input = false;
 	bool debug = false;
+	bool draw_weakly_stimulated = false;
 };
 
 struct options opts;
@@ -61,6 +62,7 @@ void print_help(char *argv)
 		"\t\t-F\tDon't self assemble neurons (freeze state)\n"
 		"\t\t-c\tGrab frames from a camera and use the pixels as input\n"
 		"\t\t-S\tShrink dendrites, as well as grow them\n"
+		"\t\t-w\tDraw neuron activity even when too weakly stimulated to fire\n"
 		"\t\t-p ARG\tPropagation time (time from neuron firing to hitting next neuron)\n"
 		"\t\t-f ARG\tFade time for activity image\n"
 		"\t\t-s ARG\tStep size for neuron input loop\n"
@@ -112,7 +114,7 @@ struct options parse_args(int argc, char **argv)
 {
 	int c = 0;
 
-	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:Rr:Ff:p:m:e:cDS")) != -1)
+	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:Rr:Ff:p:m:e:cDSw")) != -1)
 	{
 		switch (c) {
 		case 'c':
@@ -127,6 +129,9 @@ struct options parse_args(int argc, char **argv)
 			break;
 		case 'S':
 			BrainCell::shrink_dendrites = true;
+			break;
+		case 'w':
+			opts.draw_weakly_stimulated = true;
 			break;
 		case 'D':
 			opts.debug = true;
@@ -362,7 +367,7 @@ void activity_window_update(vector<NeuralNet *> &nets, TortoiseTime at_time)
 	for (uint i = 0; i < opts.layers; i++)
 	{
 		sprintf(windowname, "net (layer) #%d: neuron activity", i);
-		activity_image = nets[i]->createCurrentActivityImage(opts.width, opts.height, at_time, opts.fade_time);
+		activity_image = nets[i]->createCurrentActivityImage(opts.width, opts.height, at_time, opts.fade_time, opts.draw_weakly_stimulated);
 		imshow(windowname, activity_image);
 		if (set_callback)
 			setMouseCallback(windowname, activity_window_mouse_callback, nets[i]);

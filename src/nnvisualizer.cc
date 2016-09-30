@@ -56,7 +56,7 @@ Mat NeuralNet::createConnectionDensityImage(int width, int height)
 }
 
 
-Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at_time, float fade_time)
+Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at_time, float fade_time, bool draw_weak_stimulation)
 {
 	Mat image(height, width, CV_8UC3, Vec3b(0,0,0));
 	Vec3b pixel(0,0,0);
@@ -77,18 +77,22 @@ Mat NeuralNet::createCurrentActivityImage(int width, int height, TortoiseTime at
 			else
 				fire_c = get_faded_color(fade_time, time_delta);
 
-			time_delta = at_time - this->neurons[i][j].input_time;
-			if (time_delta > oldest || time_delta < 0)
-				input_c = 0;
-			else
-				input_c = get_faded_color(fade_time, time_delta);
-
-			if (this->neurons[i][j].fired_reason == CONCURRENT)
-				color = Vec3b(0, fire_c, 0);
-			else if (this->neurons[i][j].fired_reason == SINGLE)
-				color = Vec3b(0, 0, fire_c);
-			else
+			if (fire_c != 0) {
+				if (this->neurons[i][j].fired_reason == CONCURRENT)
+					color = Vec3b(0, fire_c, 0);
+				else //if (this->neurons[i][j].fired_reason == SINGLE)
+					color = Vec3b(0, 0, fire_c);
+			}
+			else if (draw_weak_stimulation) {
+				time_delta = at_time - this->neurons[i][j].input_time;
+				if (time_delta > oldest || time_delta < 0)
+					input_c = 0;
+				else
+					input_c = get_faded_color(fade_time, time_delta);
 				color = Vec3b(input_c, 0, 0);
+			}
+			else
+				color = Vec3b(0, 0, 0);
 			image.at<Vec3b>( PIXEL_Y(j, height, dim_y), PIXEL_X(i, width, dim_x) ) = color;
 		}
 
