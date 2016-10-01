@@ -3,21 +3,6 @@
 #include <mutex>
 
 
-/*
- * Current design requirements (to maintain nnvisualizer.cc parameters) are as
- * follows (the result of these two leave /input_time/ and /fire_time/ equal
- * if sub-threshold input triggered the action potential, and different if
- * a single input strong enough to trigger the neuron to fire was received.)
- *
- *
- *  - /input_time/ must be set ONLY when sub-action-potential input is received
- *
- *  - /fire_time/ must ALWAYS be set when an action potential (firing) is triggered
- *
- *
- */
-
-
 #define BIND(T) bind(&T::bound_input, this, input_v, at_time)
 
 using namespace std;
