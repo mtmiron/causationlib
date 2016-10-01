@@ -35,12 +35,12 @@ struct options {
 	int refractory_time = -1;
 	bool random_step = DEFAULT_RANDOM_FIRING;
 	bool input_enabled = true;
-	bool freeze_connections = false;
 	bool no_density_image = false;
 	bool no_activity_image = false;
 	bool camera_input = false;
 	bool debug = false;
-	bool draw_weakly_stimulated = false;
+	bool draw_weakly_stimulated = true;
+	bool grayscale = false;
 };
 
 struct options opts;
@@ -60,9 +60,10 @@ void print_help(char *argv)
 		"\t\t-a\tDon't draw neural activity image\n"
 		"\t\t-R\tDon't randomize step size for neuron input loop\n"
 		"\t\t-F\tDon't self assemble neurons (freeze state)\n"
-		"\t\t-c\tGrab frames from a camera and use the pixels as input\n"
+		"\t\t-c\tGrab frames from a camera and use the pixels as input (sets other parameters implicitly)\n"
 		"\t\t-S\tShrink dendrites, as well as grow them\n"
 		"\t\t-w\tDraw neuron activity even when too weakly stimulated to fire\n"
+		"\t\t-G\tConvert color camera images to grayscale instead of averaging color values\n"
 		"\t\t-p ARG\tPropagation time (time from neuron firing to hitting next neuron)\n"
 		"\t\t-f ARG\tFade time for activity image\n"
 		"\t\t-s ARG\tStep size for neuron input loop\n"
@@ -90,7 +91,7 @@ void print_status()
 			"Keymap:\n"
 			"ESC - exit\n"
 			"'h' - print this information\n"
-			"'p' - toggle pause\n"
+			"'p' - toggle pause (useful for dumping neuron info under mouse cursor)\n"
 			"'r' - toggle random firing\n"
 			"'d' - toggle updating of connection densities window(s)\n"
 			"'a' - toggle updating of firing neurons window(s)\n"
@@ -114,13 +115,14 @@ struct options parse_args(int argc, char **argv)
 {
 	int c = 0;
 
-	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:Rr:Ff:p:m:e:cDSw")) != -1)
+	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:Rr:Ff:p:m:e:cDSwG")) != -1)
 	{
 		switch (c) {
 		case 'c':
 			opts.camera_input = true;
 			opts.input_enabled = false;
 			opts.max_dendrite_bulge = 2;
+			opts.draw_weakly_stimulated = false;
 #ifdef BUILD_WITH_MULTITHREADING
 			opts.fade_time = 1.0;
 #else
@@ -149,6 +151,9 @@ struct options parse_args(int argc, char **argv)
 		case 'a':
 			opts.no_activity_image = true;
 			break;
+		case 'G':
+			opts.grayscale = true;
+			break;
 		case 'd':
 			opts.no_density_image = true;
 			break;
@@ -174,7 +179,6 @@ struct options parse_args(int argc, char **argv)
 			opts.fade_time = atof(optarg);
 			break;
 		case 'F':
-			opts.freeze_connections = true;
 			BrainCell::freeze_connections = true;
 			break;
 		case 'm':
@@ -317,15 +321,21 @@ void random_step(vector<NeuralNet *> &nets, TortoiseTime at_time)
 void frame_step(vector<NeuralNet *> &nets, TortoiseTime at_time, Mat &frame)
 {
 	Size dim = frame.size();
-	uchar pixel = 0;
+	Vec3b pixel;
+	uchar neuron_inp = 0;
 	Neuron *n;
 
 	for (uint i = 0; i < dim.width; i++)
 		for (uint j = 0; j < dim.height; j++) {
-			pixel = frame.at<uchar>(j, i);
+			if (opts.grayscale) {
+				neuron_inp = frame.at<uchar>(j, i);
+			} else {
+				pixel = frame.at<Vec3b>(j, i);
+				neuron_inp = (pixel[0] + pixel[1] + pixel[2]) / 3;
+			}
 			try {
 				n = &nets[0]->getFromWindowPosition(i, j, dim.width, dim.height);
-				n->input(pixel, at_time);
+				n->input(neuron_inp, at_time);
 			} catch (...) { }
 		}
 }
@@ -336,7 +346,9 @@ void frame_step(vector<NeuralNet *> &nets, TortoiseTime at_time, Mat &frame)
  *
  * no way to specify the time at which to grab a frame, so
  * this function dictates the time of neuron input as the time
- * the frame was grabbed and returns it for the main loop.
+ * the frame was retrieved and returns it for the main loop.
+ *
+ * This still preserves the temporal order of events, but it's messy.
  */
 TortoiseTime camera_window_update(vector<NeuralNet *> &nets, VideoCapture &cam)
 {
@@ -344,12 +356,15 @@ TortoiseTime camera_window_update(vector<NeuralNet *> &nets, VideoCapture &cam)
 	TortoiseTime at_time;
 
 #ifdef BUILD_WITH_OPENNI
-	cam.retrieve(frame, CAP_OPENNI_GRAY_IMAGE);
+	if (opts.grayscale)
+		cam.retrieve(frame, CAP_OPENNI_GRAY_IMAGE);
+	else
+		cam.retrieve(frame, CAP_OPENNI_BGR_IMAGE);
 #else
 	cam.retrieve(color_frame, 0);
-	cvtColor(color_frame, frame, CV_BGR2GRAY);
+	if (opts.grayscale)
+		cvtColor(color_frame, frame, CV_BGR2GRAY);
 #endif
-
 	imshow("camera frame", frame);
 	clock_gettime(CLOCK_REALTIME, &at_time);
 	frame_step(nets, at_time, frame);
@@ -442,52 +457,52 @@ int main(int argc, char **argv)
 		nets[i+1]->connectTo(nets[i]);
 	}
 
-  try {
-	// out of memory buffer, so the catch() has some when it goes out of scope
-	volatile char oom_buf[32 * 1024];
+	try {
+		// out of memory buffer, so the catch() has some when it goes out of scope
+		volatile char oom_buf[32 * 1024];
 #ifdef BUILD_WITH_MULTITHREADING
-	thread thr;
+		thread thr;
 #endif
 
-	for (uchar key = 0; key != 27; key = waitKey(opts.loop_time))
-	{
-		handle_keypress(key);
+		for (uchar key = 0; key != 27; key = waitKey(opts.loop_time))
+		{
+			handle_keypress(key);
 
-		if (opts.camera_input) {
-			cam.grab();
-			at_time = camera_window_update(nets, cam);
-		} else {
-			clock_gettime(CLOCK_REALTIME, &at_time);
-		}
+			if (opts.camera_input) {
+				cam.grab();
+				at_time = camera_window_update(nets, cam);
+			} else {
+				clock_gettime(CLOCK_REALTIME, &at_time);
+			}
 
-		last_loop_time = at_time;
+			last_loop_time = at_time;
 
-		if (opts.input_enabled) {
-			if (opts.random_step)
-				random_step(nets, at_time);
-			else
-				interval_step(nets, at_time);
-		}
+			if (opts.input_enabled) {
+				if (opts.random_step)
+					random_step(nets, at_time);
+				else
+					interval_step(nets, at_time);
+			}
 
 #ifdef BUILD_WITH_TIMEQUEUE
 #  ifdef BUILD_WITH_MULTITHREADING
-		if (!thr.joinable())
-			thr = thread(&TimeQueue::applyAllUpto, &BrainCell::event_queue, at_time);
-		else
-			thr.join();
+			if (!thr.joinable())
+				thr = thread(&TimeQueue::applyAllUpto, &BrainCell::event_queue, at_time);
+			else
+				thr.join();
 #  else
-		BrainCell::event_queue.applyAllUpto(at_time);
+			BrainCell::event_queue.applyAllUpto(at_time);
 #  endif
 #endif
-		if (!opts.no_activity_image)
-			activity_window_update(nets, at_time);
-		if (!opts.no_density_image)
-			density_window_update(nets, at_time);
-	}
+			if (!opts.no_activity_image)
+				activity_window_update(nets, at_time);
+			if (!opts.no_density_image)
+				density_window_update(nets, at_time);
+		}
 
-  } catch (bad_alloc &memerr) {
+	} catch (bad_alloc &memerr) {
 		cerr << "allocation error: " << memerr.what() << endl;
 		abort();
-  }
+	}
 	return 0;
 }
