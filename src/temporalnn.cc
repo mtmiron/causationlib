@@ -123,7 +123,7 @@ int Axon::input(short input_v, TortoiseTime at_time)
 {
 	at_time = at_time + propagation_time;
 	ulong n_dconnections = d_output.size();
-	short dist_voltage = input_v / (n_dconnections ? n_dconnections : 1);
+	short dist_voltage = input_v - n_dconnections;// / (n_dconnections ? n_dconnections : 1);
 
 	for (auto i = d_output.begin(); i != d_output.end(); i++)
 		(*i)->input(dist_voltage, at_time);
@@ -184,11 +184,12 @@ int Neuron::input(short input_v, TortoiseTime at_time)
 	TortoiseTime time_delta(at_time - fire_time);
 
 	// Refracting
-	if (time_delta <= refractory_time) {
+	if (fire_time > 0.0 && time_delta <= refractory_time) {
 		this->refracting = true;
 		return 0;
+	} else {
+		this->refracting = false;
 	}
-	this->refracting = false;
 
 	// Input strong enough to trigger firing on its own
 	if (input_v + resting_v >= action_v) {
