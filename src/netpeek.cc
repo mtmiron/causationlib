@@ -43,6 +43,7 @@ struct options {
 	bool draw_weakly_stimulated = true;
 	bool grayscale = false;
 	bool use_random_net = false;
+	bool autograb_camera = true;
 };
 
 struct options opts;
@@ -94,6 +95,7 @@ void print_status()
 			"Keymap:\n"
 			"ESC - exit\n"
 			"'h' - print this information\n"
+			"'g' - toggle auto grabbing of camera frames\n"
 			"'p' - toggle pause (useful for dumping neuron info under mouse cursor)\n"
 			"'r' - toggle random firing\n"
 			"'d' - toggle updating of connection densities window(s)\n"
@@ -250,6 +252,9 @@ void handle_keypress(uchar key)
 			opts.stepsize++;
 		cout << "Step size: " << opts.stepsize << "%" << endl;
 		break;
+	case 'g':
+		opts.autograb_camera = !opts.autograb_camera;
+		break;
 	}
 }
 
@@ -388,7 +393,8 @@ void activity_window_update(vector<NeuralNet *> &nets, TortoiseTime at_time)
 	for (uint i = 0; i < opts.layers; i++)
 	{
 		sprintf(windowname, "net (layer) #%d: neuron activity", i);
-		activity_image = nets[i]->createCurrentActivityImage(opts.width, opts.height, at_time, opts.fade_time, opts.draw_weakly_stimulated);
+		activity_image = nets[i]->createActivityImage(opts.width, opts.height, at_time, opts.fade_time, opts.draw_weakly_stimulated);
+//		activity_image = nets[i]->createCurrentActivityImage(opts.width, opts.height, opts.fade_time, opts.draw_weakly_stimulated);
 		imshow(windowname, activity_image);
 		if (set_callback)
 			setMouseCallback(windowname, activity_window_mouse_callback, nets[i]);
@@ -480,7 +486,8 @@ int main(int argc, char **argv)
 			handle_keypress(key);
 
 			if (opts.camera_input) {
-				cam.grab();
+				if (opts.autograb_camera)
+					cam.grab();
 				at_time = camera_window_update(nets, cam);
 			} else {
 				clock_gettime(CLOCK_REALTIME, &at_time);
