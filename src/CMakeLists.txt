@@ -37,9 +37,10 @@ endif()
 add_library( temporalnn temporalnn.cc )
 add_library( nnvisualizer nnvisualizer.cc )
 add_library( tortoise tortoise.cc )
+add_library( randomnn randomnn.cc )
 
 add_executable( causation causation.cc )
 add_executable( netpeek netpeek.cc )
 
 target_link_libraries( causation ${OpenCV_LIBS} tortoise )
-target_link_libraries( netpeek ${NETPEEK_LIBS} ${OpenCV_LIBS} temporalnn nnvisualizer tortoise )
+target_link_libraries( netpeek ${NETPEEK_LIBS} ${OpenCV_LIBS} temporalnn nnvisualizer tortoise randomnn )

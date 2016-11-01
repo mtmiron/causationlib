@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include "temporalnn.hh"
+#include "randomnn.hh"
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
@@ -41,6 +42,7 @@ struct options {
 	bool debug = false;
 	bool draw_weakly_stimulated = true;
 	bool grayscale = false;
+	bool use_random_net = false;
 };
 
 struct options opts;
@@ -64,6 +66,7 @@ void print_help(char *argv)
 		"\t\t-S\tShrink dendrites, as well as grow them\n"
 		"\t\t-w\tDraw neuron activity even when too weakly stimulated to fire\n"
 		"\t\t-G\tConvert color camera images to grayscale instead of averaging color values\n"
+		"\t\t-X\tRandomly assign all values for each individual neuron\n"
 		"\t\t-p ARG\tPropagation time (time from neuron firing to hitting next neuron)\n"
 		"\t\t-f ARG\tFade time for activity image\n"
 		"\t\t-s ARG\tStep size for neuron input loop\n"
@@ -115,7 +118,7 @@ struct options parse_args(int argc, char **argv)
 {
 	int c = 0;
 
-	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:Rr:Ff:p:m:e:cDSwG")) != -1)
+	while ((c = getopt(argc, argv, "x:y:hs:dai:l:t:Rr:Ff:p:m:e:cDSwGX")) != -1)
 	{
 		switch (c) {
 		case 'c':
@@ -186,6 +189,9 @@ struct options parse_args(int argc, char **argv)
 			break;
 		case 'e':
 			opts.excited_time = atoi(optarg);
+			break;
+		case 'X':
+			opts.use_random_net = true;
 			break;
 		case 'h':
 		case '?':
@@ -428,27 +434,32 @@ int main(int argc, char **argv)
 
 	for (uint i = 0; i < opts.layers; i++)
 	{
-		nets.push_back(new NeuralNet(opts.width, opts.height));
-		for (int x = 0; x < opts.width; x++)
-			for (int y = 0; y < opts.height; y++)
-			{
-				if (opts.propagation_time != -1)
-					nets[i]->neurons[x][y].setPropagationTime(opts.propagation_time);
-				else
-					opts.propagation_time = nets[i]->neurons[x][y].propagation_time;
-				if (opts.max_dendrite_bulge != -1)
-					nets[i]->neurons[x][y].setMaxDendriteConnections(opts.max_dendrite_bulge);
-				else
-					opts.max_dendrite_bulge = nets[i]->neurons[x][y].max_dendrite_bulge;
-				if (opts.excited_time != -1)
-					nets[i]->neurons[x][y].setExcitedTime(opts.excited_time);
-				else
-					opts.excited_time = nets[i]->neurons[x][y].excited_time;
-				if (opts.refractory_time != -1)
-					nets[i]->neurons[x][y].setRefractoryTime(opts.refractory_time);
-				else
-					opts.refractory_time = nets[i]->neurons[x][y].refractory_time;
-			}
+		if (opts.use_random_net) {
+			nets.push_back(new RandomNet(opts.width, opts.height));
+		} else {
+			nets.push_back(new NeuralNet(opts.width, opts.height));
+
+			for (int x = 0; x < opts.width; x++)
+				for (int y = 0; y < opts.height; y++)
+				{
+					if (opts.propagation_time != -1)
+						nets[i]->neurons[x][y].setPropagationTime(opts.propagation_time);
+					else
+						opts.propagation_time = nets[i]->neurons[x][y].propagation_time;
+					if (opts.max_dendrite_bulge != -1)
+						nets[i]->neurons[x][y].setMaxDendriteConnections(opts.max_dendrite_bulge);
+					else
+						opts.max_dendrite_bulge = nets[i]->neurons[x][y].max_dendrite_bulge;
+					if (opts.excited_time != -1)
+						nets[i]->neurons[x][y].setExcitedTime(opts.excited_time);
+					else
+						opts.excited_time = nets[i]->neurons[x][y].excited_time;
+					if (opts.refractory_time != -1)
+						nets[i]->neurons[x][y].setRefractoryTime(opts.refractory_time);
+					else
+						opts.refractory_time = nets[i]->neurons[x][y].refractory_time;
+				}
+		}
 	}
 	print_status();
 
