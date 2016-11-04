@@ -23,5 +23,6 @@ RandomNet::RandomNet(int x, int y) : NeuralNet(x, y)
 			neurons[i][j].action_v = 0 - (random() % MAX_ACTION_VOLTAGE);
 			neurons[i][j].fire_v = 0 - (random() % MAX_FIRE_VOLTAGE);
 			neurons[i][j].resting_v = 0 - (random() % MAX_RESTING_VOLTAGE);
+			neurons[i][j].addDendriteOutput(&neurons[random() % x][random() % y]);
 		}
 }
