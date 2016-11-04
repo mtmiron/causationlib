@@ -105,9 +105,6 @@ class Neuron : public BrainCell
 	Axon axon;
 	vector<Dendrite> dendrites;
 
-	void addNeuronOutput(Neuron *n);
-	void addDendriteOutput(Neuron *n);
-
   public:
   	// In milliseconds
 	unsigned short excited_time = 100;
@@ -127,6 +124,9 @@ class Neuron : public BrainCell
 	void setMaxDendriteConnections(unsigned int max);
 	void setExcitedTime(unsigned short time);
 	void setRefractoryTime(unsigned short time);
+	void addNeuronOutput(Neuron *n);
+	void addDendriteOutput(Neuron *n);
+
 
 	friend ostream &operator<<(ostream &os, Neuron &neuron);
 #ifdef BUILD_WITH_TIMEQUEUE
