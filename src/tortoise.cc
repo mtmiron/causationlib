@@ -8,6 +8,44 @@ using namespace std;
 
 /*
  * class TimeQueue
+ *
+ * The TimeQueue class is a quick, easy way of ensuring that the temporal
+ * component of the neural net is preserved perfectly.
+ *
+ * A less computationally expensive method would be to divide events
+ * up into time slices, and use standard numerical methods to minimize
+ * the amount of error per time slice (other neurophysiology simulations
+ * tend to do this, allowing the user to define the acceptable error.)
+ *
+ * The basis of the temporalnn.cc design is that every event defines the
+ * amount of time that it takes until completion (completes at T + N, where T is the
+ * start time and N is the duration of the event.)  To implement this,
+ * the TimeQueue class maintains a queue that's automatically sorted
+ * by time (via a Multimap object.)  If compiling with the TimeQueue is
+ * enabled (the default), all neural net events are bound with a STL
+ * closure and inserted into the TimeQueue object for execution in temporal
+ * order.
+ *
+ * The disadvantage of this method is that it essentially reduces the speed
+ * of execution to that of an interpreted language (all function calls
+ * within the neural net are "abstracted" closures), but without it,
+ * the sequence of events in time would be an uncontrollable function of
+ * the order of neuron stimulation.
+ *
+ * To illustrate, if a neuron fires at one end of a net layer, and a
+ * neuron at the other end of a net layer fires simultaneously, even
+ * with both events executing on independent CPU cores, the resulting
+ * spread of stimulation triggered by the events would be unpredictable: they
+ * have to combine properly at every single point in the neural net, regardless
+ * of how long the "chain" of stimulation might be or what its unique
+ * properties are.
+ *
+ * Since every neuron has adjustable parameters for the amount of time
+ * it takes the signal fired off from it to hit the next neuron, as well
+ * as the voltage change it causes (which allows for neurons to inhibit
+ * other neurons just like in human neurophysiology), an approximation
+ * would make the results of the simulation unreliable due to dependence on
+ * uncontrollable factors.
  */
 int TimeQueue::size()
 {
