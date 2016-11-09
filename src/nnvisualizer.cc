@@ -102,43 +102,8 @@ Mat NeuralNet::createActivityImage(int width, int height, TortoiseTime at_time, 
 
 Mat NeuralNet::createCurrentActivityImage(int width, int height, float fade_time, bool draw_weak_stimulation)
 {
-	Mat image(height, width, CV_8UC3, Vec3b(0,0,0));
-	Vec3b pixel(0,0,0);
-	Vec3b color(0,0,0);
-	uchar fire_c = 0;
-	uchar input_c = 0;
-	TortoiseTime time_delta, at_time;
-	struct timespec oldest = { (time_t)floor(fade_time), (long)(pow(10,9) * (fade_time - (int)fade_time)) };
+	TortoiseTime at_time;
 
 	clock_gettime(CLOCK_REALTIME, &at_time);
-	for (int i = 0; i < dim_x; i++)
-		for (int j = 0; j < dim_y; j++)
-		{
-			time_delta = at_time - this->neurons[i][j].fire_time;
-			// Don't draw neurons with future firing times, or longer than fade_time ago
-//			if (time_delta > oldest || time_delta < 0)
-//				fire_c = 0;
-//			else
-				fire_c = get_faded_color(fade_time, time_delta);
-
-			if (fire_c != 0) {
-				if (this->neurons[i][j].fired_reason == CONCURRENT)
-					color = Vec3b(0, fire_c, 0);
-				else //if (this->neurons[i][j].fired_reason == SINGLE)
-					color = Vec3b(0, 0, fire_c);
-			}
-			else if (draw_weak_stimulation) {
-				time_delta = at_time - this->neurons[i][j].input_time;
-				if (time_delta > oldest || time_delta < 0)
-					input_c = 0;
-				else
-					input_c = get_faded_color(fade_time, time_delta);
-				color = Vec3b(input_c, 0, 0);
-			}
-//			else
-//				color = Vec3b(0, 0, 0);
-			image.at<Vec3b>( PIXEL_Y(j, height, dim_y), PIXEL_X(i, width, dim_x) ) = color;
-		}
-
-	return image;
+	return createActivityImage(width, height, at_time, fade_time, draw_weak_stimulation);
 }
