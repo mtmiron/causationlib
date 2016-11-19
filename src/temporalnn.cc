@@ -289,11 +289,15 @@ void Neuron::setMaxDendriteConnections(unsigned int max)
 
 ostream &operator<<(ostream &os, Neuron &neuron)
 {
-	os << "{(" << neuron.x << "," << neuron.y << "); " << "input_t = " << neuron.input_time
-		<< "; fire_t = " << neuron.fire_time << "; voltage = " << neuron.voltage << "mV; propagation_t = "
+	os << "{(" << neuron.x << "," << neuron.y << "): " << "input_t = " << neuron.input_time
+		<< "; fire_t = " << neuron.fire_time << "; " << std::endl
+		<< "\t" << "voltage = " << neuron.voltage << "mV; propagation_t = "
 		<< neuron.axon.propagation_time << "ms; refractory_t = " << neuron.refractory_time << "ms; "
-		<< "excited_t = " << neuron.excited_time << "ms; " << "num connections = " << neuron.numberOfConnections()
-		<< "; " << "refracting = " << neuron.refracting << "}";
+		<< "excited_t = " << neuron.excited_time << "ms; " << std::endl
+		<< "\t" << "fire_v = " << neuron.fire_v << "mV; " << "resting_v = " << neuron.resting_v
+		<< "mV; action_v = " << neuron.action_v << "mV; "
+		<< "num connections = " << neuron.numberOfConnections() << "; refracting = " << neuron.refracting
+		<< "}";
 	return os;
 }
 
