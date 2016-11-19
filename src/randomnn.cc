@@ -10,10 +10,6 @@
 
 RandomNet::RandomNet(int x, int y) : NeuralNet(x, y)
 {
-	struct timespec ts;
-
-	clock_gettime(CLOCK_REALTIME, &ts);
-	srandom(ts.tv_sec);
 	for (int i = 0; i < x; i++)
 		for (int j = 0; j < y; j++)
 		{
