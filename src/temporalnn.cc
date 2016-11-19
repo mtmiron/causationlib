@@ -2,7 +2,7 @@
 #include <iostream>
 #include <mutex>
 
-
+/* Deferred calls (for the TimeQueue) */
 #define BIND(T) bind(&T::bound_input, this, input_v, at_time)
 
 using namespace std;

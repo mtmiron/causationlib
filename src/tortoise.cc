@@ -98,10 +98,14 @@ int TimeQueue::clear()
 {
 	int n;
 
+#ifdef BUILD_WITH_MULTITHREADING
 	q_erase_mutex.lock();
+#endif
 	n = queue.size();
 	queue.clear();
+#ifdef BUILD_WITH_MULTITHREADING
 	q_erase_mutex.unlock();
+#endif
 	return n;
 }
 
@@ -110,11 +114,15 @@ int TimeQueue::applyNext()
 	if (queue.size() == 0)
 		return -1;
 
+#ifdef BUILD_WITH_MULTITHREADING
 	q_erase_mutex.lock();
+#endif
 	auto next = queue.begin();
 	timed_call_t ret = next->second;
 	queue.erase(next);
+#ifdef BUILD_WITH_MULTITHREADING
 	q_erase_mutex.unlock();
+#endif
 	return ret();
 }
 

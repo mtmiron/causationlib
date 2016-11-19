@@ -394,7 +394,6 @@ void activity_window_update(vector<NeuralNet *> &nets, TortoiseTime at_time)
 	{
 		sprintf(windowname, "net (layer) #%d: neuron activity", i);
 		activity_image = nets[i]->createActivityImage(opts.width, opts.height, at_time, opts.fade_time, opts.draw_weakly_stimulated);
-//		activity_image = nets[i]->createCurrentActivityImage(opts.width, opts.height, opts.fade_time, opts.draw_weakly_stimulated);
 		imshow(windowname, activity_image);
 		if (set_callback)
 			setMouseCallback(windowname, activity_window_mouse_callback, nets[i]);
