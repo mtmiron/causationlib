@@ -20,9 +20,9 @@ RandomNet::RandomNet(int x, int y) : NeuralNet(x, y)
 			neurons[i][j].setPropagationTime(random() % MAX_PROPAGATION_TIME);
 			neurons[i][j].setRefractoryTime(random() % MAX_REFRACTORY_TIME);
 			neurons[i][j].setExcitedTime(random() % MAX_EXCITED_TIME);
-			neurons[i][j].action_v = 0 - (random() % MAX_ACTION_VOLTAGE);
-			neurons[i][j].fire_v = 0 - (random() % MAX_FIRE_VOLTAGE);
 			neurons[i][j].resting_v = 0 - (random() % MAX_RESTING_VOLTAGE);
+			neurons[i][j].action_v = neurons[i][j].resting_v + (random() % MAX_ACTION_VOLTAGE);
+			neurons[i][j].fire_v = (random() % MAX_FIRE_VOLTAGE);
 			neurons[i][j].addDendriteOutput(&neurons[random() % x][random() % y]);
 		}
 }
