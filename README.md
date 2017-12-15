@@ -5,6 +5,7 @@ The neural net code is designed to mimic very simple neurophysiology, not implem
 
 That statement should probably be qualified by saying that manipulating the parameters of neurophysiology on-the-fly to see what changes, is what's meant by "precisely as they would in a real nervous system"  :)
 
+![screenshot](src/netpeek.png)
 
 ### What's with the name?
 Cause and effect: I've been pondering, of late, what the foundation of human intelligence is (from a more psychological perspective than anything.)  My feeling is that an incredibly useful abstraction of the bulk of human intellect could be obtained if a way to judge what caused a certain event to happen could be found -- something along the lines of a program learning how to recreate observed events, which would allow very simple and very standard pathfinding algorithms to, say, look at a room and figure out how to manipulate the objects into a goal state.
