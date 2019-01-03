@@ -1,7 +1,7 @@
 # causationlib
 This is a collection of simulations.  Usefulness is neither guaranteed nor provided; a deeper understanding on the part of the author is, however, selfishly maximized with no concern whatsoever for any other parameters.
 
-The neural net code is designed to mimic very simple neurophysiology, not implement established AI algorithms; however, it ignores many forces that influence real biology, and the complexity of modeling neurotransmitter synapses is not likely to be addressed anytime soon.
+The neural net code is designed to mimic very simple neurophysiology, not implement established AI algorithms; however, it ignores many forces that influence real biology, and the complexity of modeling neurotransmission is not likely to be addressed anytime soon.
 
 ![screenshot](src/netpeek.png)
 
